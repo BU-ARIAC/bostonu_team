@@ -592,7 +592,7 @@ int main(int argc, char ** argv) {
 //   // ROS_INFO("End effector pose->position (x,y,z): (%f,%f,%f)", p.pose.position.x, p.pose.position.y, p.pose.position.z);
 //   // ROS_INFO("End effector pose->orientation (x,y,z,w): (%f,%f,%f,%f)", p.pose.orientation.x, p.pose.orientation.y, p.pose.orientation.z, p.pose.orientation.w);
 
-  First, swing around to the agv side
+  // First, swing around to the agv side
   geometry_msgs::Pose target_pose;
   target_pose.position.x = p.pose.position.x;
   target_pose.position.y = p.pose.position.y;
