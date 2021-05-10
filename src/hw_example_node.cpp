@@ -244,7 +244,9 @@ int main(int argc, char ** argv) {
   printf("Test msg 5, bp created...\n");
 
 // //   // Then build the list of part counts in the bins
-//   pl.PopulateBinList(bp);
+  pl.PopulateBinList(bp);
+
+  printf("Test msg 6, bins populated...\n");
 
 //   int test_dbp = pl.DecrementBinPart("assembly_regulator_red");
 //   std::cout << "Decrement count of assembly_regulator_red, should be 3? " << std::to_string(test_dbp) << "\n";
