@@ -55,7 +55,7 @@ install(TARGETS hw_example_node
 )
 
 ## Mark cpp header files for installation
-# install(DIRECTORY include/
+# install(DIRECTORY include/${PROJECT_NAME}/
 #   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 #   FILES_MATCHING PATTERN "*.h"
 #   PATTERN ".svn" EXCLUDE
@@ -63,7 +63,7 @@ install(TARGETS hw_example_node
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 install(FILES
- config/bu_user_config_all.yaml
+ config/team_config.yaml
  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/config
 )
 
