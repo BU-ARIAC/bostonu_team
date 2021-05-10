@@ -75,7 +75,7 @@ int Parts_List::PopulateBinList(Bin_Parts &bp) {
     pair1.first = key;
     pair1.second = bp.PartCount(key);
     this->list_part_count["bin"].insert(pair1);
-    stad::cout << "INI POPULATEBINLIST 2, part: " << key << ", lookup after insert: " << this->list_part_count["bin"].find(part_type)->second << "\n";
+    std::cout << "INI POPULATEBINLIST 2, part: " << key << ", lookup after insert: " << this->list_part_count["bin"].find(part_type)->second << "\n";
   }
   return 1;
 }
