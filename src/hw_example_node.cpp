@@ -240,7 +240,7 @@ int main(int argc, char ** argv) {
 //   // Then build the list of part counts in the bins
   pl.PopulateBinList(bp);
 
-//   int test_dbp = pl.DecrementBinPart("assembly_regulator_red");
+  int test_dbp = pl.DecrementBinPart("assembly_regulator_red");
   std::cout << "Decrement count of assembly_regulator_red, should be 3? " << std::to_string(test_dbp) << "\n";
 
 
