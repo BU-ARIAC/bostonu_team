@@ -230,14 +230,18 @@ int main(int argc, char ** argv) {
   
   // Last argument is the default name of the node.
   ros::init(argc, argv, "hw_example_node");
-	
+
   printf("Test msg 3, node started...\n");
 
 // //   // First initialize the parts list
   Parts_List pl;
 
+  printf("Test msg 4, pl created...\n");
+
 // //   // Call logical cameras over bins and get all parts
-//   Bin_Parts bp;
+  Bin_Parts bp;
+
+  printf("Test msg 5, bp created...\n");
 
 // //   // Then build the list of part counts in the bins
 //   pl.PopulateBinList(bp);
