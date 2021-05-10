@@ -264,46 +264,46 @@ int main(int argc, char ** argv) {
 
 
 
-//   // Instance of custom class from above.
-//   MyCompetitionClass comp_class(node);
+  // Instance of custom class from above.
+  MyCompetitionClass comp_class(node);
 
-//   // Subscribe to the '/ariac/current_score' topic.
-//   ros::Subscriber current_score_subscriber = node.subscribe(
-//     "/ariac/current_score", 10,
-//     &MyCompetitionClass::current_score_callback, &comp_class);
+  // Subscribe to the '/ariac/current_score' topic.
+  ros::Subscriber current_score_subscriber = node.subscribe(
+    "/ariac/current_score", 10,
+    &MyCompetitionClass::current_score_callback, &comp_class);
 
-//   // Subscribe to the '/ariac/competition_state' topic.
-//   ros::Subscriber competition_state_subscriber = node.subscribe(
-//     "/ariac/competition_state", 10,
-//     &MyCompetitionClass::competition_state_callback, &comp_class);
+  // Subscribe to the '/ariac/competition_state' topic.
+  ros::Subscriber competition_state_subscriber = node.subscribe(
+    "/ariac/competition_state", 10,
+    &MyCompetitionClass::competition_state_callback, &comp_class);
 
-//   // Subscribe to the '/ariac/joint_states' topic.
-//   ros::Subscriber kitting_joint_state_subscriber = node.subscribe(
-//     "/ariac/kitting/joint_states", 10,
-//     &MyCompetitionClass::kitting_joint_state_callback, &comp_class);
+  // Subscribe to the '/ariac/joint_states' topic.
+  ros::Subscriber kitting_joint_state_subscriber = node.subscribe(
+    "/ariac/kitting/joint_states", 10,
+    &MyCompetitionClass::kitting_joint_state_callback, &comp_class);
 
-//   ros::Subscriber assembly_joint_state_subscriber = node.subscribe(
-//     "/ariac/gantry/joint_states", 10,
-//     &MyCompetitionClass::assembly_joint_state_callback, &comp_class);
+  ros::Subscriber assembly_joint_state_subscriber = node.subscribe(
+    "/ariac/gantry/joint_states", 10,
+    &MyCompetitionClass::assembly_joint_state_callback, &comp_class);
 
-//   // %Tag(SUB_FUNC)%
-//   // Subscribe to the '/ariac/breakbeam_0_change' topic.
-//   ros::Subscriber breakbeam_subscriber = node.subscribe(
-//     "/ariac/breakbeam_0_change", 10,
-//     &MyCompetitionClass::breakbeam_callback, &comp_class);
+  // %Tag(SUB_FUNC)%
+  // Subscribe to the '/ariac/breakbeam_0_change' topic.
+  ros::Subscriber breakbeam_subscriber = node.subscribe(
+    "/ariac/breakbeam_0_change", 10,
+    &MyCompetitionClass::breakbeam_callback, &comp_class);
 
-//   // Subscribe to the '/ariac/logical_camera_0' topic.
-//   ros::Subscriber logical_camera_subscriber = node.subscribe(
-//     "/ariac/logical_camera_0", 10,
-//     &MyCompetitionClass::logical_camera_callback, &comp_class);
+  // Subscribe to the '/ariac/logical_camera_0' topic.
+  ros::Subscriber logical_camera_subscriber = node.subscribe(
+    "/ariac/logical_camera_0", 10,
+    &MyCompetitionClass::logical_camera_callback, &comp_class);
 
-//   ros::Subscriber kitting_gripper_subscriber = node.subscribe(
-//     "/ariac/kitting/arm/gripper/state", 10,
-//     &MyCompetitionClass::kitting_gripper_callback, &comp_class);
+  ros::Subscriber kitting_gripper_subscriber = node.subscribe(
+    "/ariac/kitting/arm/gripper/state", 10,
+    &MyCompetitionClass::kitting_gripper_callback, &comp_class);
 
-
-//   ROS_INFO("Setup complete.");
-//   start_competition(node);
+  printf("Test msg 7, setup complete...\n");
+  ROS_INFO("Setup complete.");
+  start_competition(node);
 // //   ros::spin();  // This executes callbacks on new data until ctrl-c.
 //   ros::AsyncSpinner spinner(1);  // For moveit to not block all code execution
 //   spinner.start();  // For moveit to not block all code execution
