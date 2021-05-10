@@ -226,26 +226,27 @@ private:
 int main(int argc, char ** argv) {
 
   test_om();
+  printf("Test msg 2, about to start node...\n");
   
   // Last argument is the default name of the node.
-//   ros::init(argc, argv, "hw_example_node");
+  ros::init(argc, argv, "hw_example_node");
 
 //   // First initialize the parts list
-//   Parts_List pl;
+  Parts_List pl;
 
 //   // Call logical cameras over bins and get all parts
-//   Bin_Parts bp;
+  Bin_Parts bp;
 
 //   // Then build the list of part counts in the bins
-//   pl.PopulateBinList(bp);
+  pl.PopulateBinList(bp);
 
 //   int test_dbp = pl.DecrementBinPart("assembly_regulator_red");
-//   std::cout << "Decrement count of assembly_regulator_red, should be 3? " << std::to_string(test_dbp) << "\n";
+  std::cout << "Decrement count of assembly_regulator_red, should be 3? " << std::to_string(test_dbp) << "\n";
 
 
 //   // Print out some part frames to verify they're correct...
-//   std::vector<std::string> test = bp.GetFrames("assembly_regulator_red");
-//   std::cout << test[0] << "\n" << bp.GetFrame("assembly_regulator_red") << "\n" << std::to_string(bp.PartCount("assembly_regulator_blue")) << "\n";
+  std::vector<std::string> test = bp.GetFrames("assembly_regulator_red");
+  std::cout << test[0] << "\n" << bp.GetFrame("assembly_regulator_red") << "\n" << std::to_string(bp.PartCount("assembly_regulator_blue")) << "\n";
 
 //   ros::NodeHandle node;
 
