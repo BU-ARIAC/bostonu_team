@@ -256,11 +256,11 @@ int main(int argc, char ** argv) {
 //   std::vector<std::string> test = bp.GetFrames("assembly_regulator_red");
 //   std::cout << test[0] << "\n" << bp.GetFrame("assembly_regulator_red") << "\n" << std::to_string(bp.PartCount("assembly_regulator_blue")) << "\n";
 
-//   ros::NodeHandle node;
+  ros::NodeHandle node;
 
-//   printf("asm order should be 2: %d\n", order_asm_order);
-//   Orders orders(pl, bp);
-//   printf("orders max priority: %d\n", orders.max_priority);
+  // printf("asm order should be 2: %d\n", order_asm_order);
+  Orders orders(pl, bp);
+  printf("orders max priority: %d\n", orders.max_priority);
 
 
 
