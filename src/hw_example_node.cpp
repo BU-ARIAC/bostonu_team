@@ -631,31 +631,31 @@ int main(int argc, char ** argv) {
   move_group.move();
   printf("swing to agv done...\n");
 
-  // ros::Duration(1.0).sleep();
+  ros::Duration(1.0).sleep();
 
-  // waypoints.push_back(target_pose6);
+  waypoints.push_back(target_pose6);
 
-  // geometry_msgs::Pose target_pose1 = target_pose6;
-  // target_pose1.position.y = tfGeom2.transform.translation.y;  // Just move left
-  // waypoints.push_back(target_pose1); 
+  geometry_msgs::Pose target_pose1 = target_pose6;
+  target_pose1.position.y = tfGeom2.transform.translation.y;  // Just move left
+  waypoints.push_back(target_pose1); 
 
-  // geometry_msgs::Pose target_pose10 = target_pose1;
-  // target_pose10.position.x = tfGeom2.transform.translation.x;
-  // target_pose10.position.z = tfGeom2.transform.translation.z+.1;  // Move over part
-  // waypoints.push_back(target_pose10);
+  geometry_msgs::Pose target_pose10 = target_pose1;
+  target_pose10.position.x = tfGeom2.transform.translation.x;
+  target_pose10.position.z = tfGeom2.transform.translation.z+.1;  // Move over part
+  waypoints.push_back(target_pose10);
 
-  // double fraction = move_group.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
-  // my_plan.trajectory_ = trajectory;
-  // move_group.execute(my_plan);
-  // printf("done moving near part\n");
+  double fraction = move_group.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
+  my_plan.trajectory_ = trajectory;
+  move_group.execute(my_plan);
+  printf("done moving near part\n");
 
-  // gripper_service_.request.enable = true;
-  // gripper_client_.call(gripper_service_);
-  // if (gripper_service_.response.success) {
-  //   ROS_INFO_STREAM("Gripper activated!");
-  // } else {
-  //   ROS_WARN_STREAM("Gripper activation failed!");
-  // }
+  gripper_service_.request.enable = true;
+  gripper_client_.call(gripper_service_);
+  if (gripper_service_.response.success) {
+    ROS_INFO_STREAM("Gripper activated!");
+  } else {
+    ROS_WARN_STREAM("Gripper activation failed!");
+  }
 
   // waypoints.clear();
   // target_pose10.position.z = 0.785;  // Move over part
