@@ -35,6 +35,7 @@
 #include <nist_gear/VacuumGripperControl.h>
 #include <nist_gear/VacuumGripperState.h>
 #include <nist_gear/AGVControl.h>
+#include <nist_gear/AGVToAssemblyStation.h>
 
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_listener.h"
@@ -744,17 +745,16 @@ int main(int argc, char ** argv) {
   move_group.execute(my_plan);
   printf("hopefully moved away from part...\n");
 
-  std::string s = std::to_string(3);
-  ros::ServiceClient start_client =
-    node.serviceClient<nist_gear::AGVControl>("/ariac/agv"+s+"/submit_shipment");
+  ros::ServiceClient submit_client = node.serviceClient<nist_gear::AGVToAssemblyStation>("/ariac/"+order_part.agv+"/submit_shipment");
   if (!start_client.exists()) {
     ROS_INFO("Waiting for the client to be ready...");
     start_client.waitForExistence();
     ROS_INFO("Service started.");
   }
 
-  nist_gear::AGVControl srv;
-  srv.request.shipment_type = "order_0_kitting_shipment_0";
+  nist_gear::AGVToAssemblyStation srv;
+  srv.request.shipment_type = order_part.order_number;
+  srv.request.assembly_station_name = order_part.station;
 
   start_client.call(srv);
 
