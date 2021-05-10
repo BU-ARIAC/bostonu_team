@@ -618,14 +618,14 @@ int main(int argc, char ** argv) {
   move_group.move();
   printf("move 2 done...\n");
 
-  // ros::Duration(1.0).sleep();
+  ros::Duration(1.0).sleep();
 
-  // geometry_msgs::Pose target_pose6 = target_pose5;
-  // target_pose6.position.x = -2.26;  // Swing around to AGV side
-  // move_group.setPoseTarget(target_pose6);
-  // success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-  // move_group.move();
-  // printf("swing to agv done...\n");
+  geometry_msgs::Pose target_pose6 = target_pose5;
+  target_pose6.position.x = -2.26;  // Swing around to AGV side
+  move_group.setPoseTarget(target_pose6);
+  success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+  move_group.move();
+  printf("swing to agv done...\n");
 
   // ros::Duration(1.0).sleep();
 
