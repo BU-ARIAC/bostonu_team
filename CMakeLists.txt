@@ -41,11 +41,11 @@ target_link_libraries(hw_example_node ${catkin_LIBRARIES})
 # See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
 
 ## Mark executable scripts (Python etc.) for installation
-install(PROGRAMS
-  script/hw_example_node.py
-  script/tf2_example.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+# install(PROGRAMS
+#   script/hw_example_node.py
+#   script/tf2_example.py
+#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+# )
 
 ## Mark executables and/or libraries for installation
 install(TARGETS hw_example_node
