@@ -608,15 +608,15 @@ int main(int argc, char ** argv) {
 
   printf("Test msg 10, 1 move done?...\n");
 
-  // ros::Duration(1.0).sleep();
+  ros::Duration(1.0).sleep();
 
-  // geometry_msgs::Pose target_pose5 = target_pose;
-  // target_pose5.position.x = -1.3;  // Swing around to AGV side
-  // target_pose5.position.y = 0.9;  // Swing around to AGV side
-  // move_group.setPoseTarget(target_pose5);
-  // success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-  // move_group.move();
-  // printf("move 2 done...\n");
+  geometry_msgs::Pose target_pose5 = target_pose;
+  target_pose5.position.x = -1.3;  // Swing around to AGV side
+  target_pose5.position.y = 0.9;  // Swing around to AGV side
+  move_group.setPoseTarget(target_pose5);
+  success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+  move_group.move();
+  printf("move 2 done...\n");
 
   // ros::Duration(1.0).sleep();
 
