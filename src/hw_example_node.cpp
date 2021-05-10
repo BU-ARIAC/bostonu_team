@@ -304,118 +304,120 @@ int main(int argc, char ** argv) {
   printf("Test msg 7, setup complete...\n");
   ROS_INFO("Setup complete.");
   start_competition(node);
-// //   ros::spin();  // This executes callbacks on new data until ctrl-c.
-//   ros::AsyncSpinner spinner(1);  // For moveit to not block all code execution
-//   spinner.start();  // For moveit to not block all code execution
+//   ros::spin();  // This executes callbacks on new data until ctrl-c.
+  ros::AsyncSpinner spinner(1);  // For moveit to not block all code execution
+  spinner.start();  // For moveit to not block all code execution
 
-//   ros::NodeHandle node_kitting_("/ariac/kitting");
+  ros::NodeHandle node_kitting_("/ariac/kitting");
 	
-//   static const std::string PLANNING_GROUP_KITTING = "kitting_arm";
-//   static const std::string PLANNING_DESC_KITTING = "/ariac/kitting/robot_description";
-//   static const std::string PLANNING_SCENE_NS_KITTING = "/ariac/kitting";
+  static const std::string PLANNING_GROUP_KITTING = "kitting_arm";
+  static const std::string PLANNING_DESC_KITTING = "/ariac/kitting/robot_description";
+  static const std::string PLANNING_SCENE_NS_KITTING = "/ariac/kitting";
 
-//   moveit::planning_interface::MoveGroupInterface::Options loadOptions(PLANNING_GROUP_KITTING, PLANNING_DESC_KITTING, node_kitting_);
-//   moveit::planning_interface::MoveGroupInterface move_group(loadOptions);
-//   moveit::planning_interface::PlanningSceneInterface planning_scene_interface(PLANNING_SCENE_NS_KITTING);
+  moveit::planning_interface::MoveGroupInterface::Options loadOptions(PLANNING_GROUP_KITTING, PLANNING_DESC_KITTING, node_kitting_);
+  moveit::planning_interface::MoveGroupInterface move_group(loadOptions);
+  moveit::planning_interface::PlanningSceneInterface planning_scene_interface(PLANNING_SCENE_NS_KITTING);
   
-//   const robot_state::JointModelGroup* joint_model_group = move_group.getCurrentState()->getJointModelGroup(PLANNING_GROUP_KITTING);
+  const robot_state::JointModelGroup* joint_model_group = move_group.getCurrentState()->getJointModelGroup(PLANNING_GROUP_KITTING);
 
-//   ros::NodeHandle node_gantry_("/ariac/gantry");
+  ros::NodeHandle node_gantry_("/ariac/gantry");
 	
-//   static const std::string PLANNING_GROUP_GANTRY = "gantry_full";
-//   static const std::string PLANNING_DESC_GANTRY = "/ariac/gantry/robot_description";
-//   static const std::string PLANNING_SCENE_NS_GANTRY = "/ariac/gantry";
+  static const std::string PLANNING_GROUP_GANTRY = "gantry_full";
+  static const std::string PLANNING_DESC_GANTRY = "/ariac/gantry/robot_description";
+  static const std::string PLANNING_SCENE_NS_GANTRY = "/ariac/gantry";
 
-//   moveit::planning_interface::MoveGroupInterface::Options loadOptions_ga(PLANNING_GROUP_GANTRY, PLANNING_DESC_GANTRY, node_gantry_);
-//   moveit::planning_interface::MoveGroupInterface move_group_ga(loadOptions_ga);
-//   moveit::planning_interface::PlanningSceneInterface planning_scene_interface_ga(PLANNING_SCENE_NS_GANTRY);
+  moveit::planning_interface::MoveGroupInterface::Options loadOptions_ga(PLANNING_GROUP_GANTRY, PLANNING_DESC_GANTRY, node_gantry_);
+  moveit::planning_interface::MoveGroupInterface move_group_ga(loadOptions_ga);
+  moveit::planning_interface::PlanningSceneInterface planning_scene_interface_ga(PLANNING_SCENE_NS_GANTRY);
   
-//   const robot_state::JointModelGroup* joint_model_group_ga = move_group_ga.getCurrentState()->getJointModelGroup(PLANNING_GROUP_GANTRY);
+  const robot_state::JointModelGroup* joint_model_group_ga = move_group_ga.getCurrentState()->getJointModelGroup(PLANNING_GROUP_GANTRY);
 
-//   // We can print the name of the reference frame for this robot.
-//   ROS_INFO("Planning frame arm: %s", move_group.getPlanningFrame().c_str());
+  // We can print the name of the reference frame for this robot.
+  ROS_INFO("Planning frame arm: %s", move_group.getPlanningFrame().c_str());
 
-//   // We can also print the name of the end-effector link for this group.
-//   ROS_INFO("End effector link arm: %s", move_group.getEndEffectorLink().c_str());
-//   geometry_msgs::PoseStamped p = move_group.getCurrentPose();
-//   ROS_INFO("End effector pose->position (x,y,z): (%f,%f,%f)", p.pose.position.x, p.pose.position.y, p.pose.position.z);
-//   ROS_INFO("End effector pose->orientation (x,y,z,w): (%f,%f,%f,%f)", p.pose.orientation.x, p.pose.orientation.y, p.pose.orientation.z, p.pose.orientation.w);
+  // We can also print the name of the end-effector link for this group.
+  ROS_INFO("End effector link arm: %s", move_group.getEndEffectorLink().c_str());
+  geometry_msgs::PoseStamped p = move_group.getCurrentPose();
+  ROS_INFO("End effector pose->position (x,y,z): (%f,%f,%f)", p.pose.position.x, p.pose.position.y, p.pose.position.z);
+  ROS_INFO("End effector pose->orientation (x,y,z,w): (%f,%f,%f,%f)", p.pose.orientation.x, p.pose.orientation.y, p.pose.orientation.z, p.pose.orientation.w);
 
-//   // geometry_msgs::PoseStamped moveit::planning_interface::MoveGroup::getCurrentPose 	( 	const std::string &  	end_effector_link = ""	) 	
+  // geometry_msgs::PoseStamped moveit::planning_interface::MoveGroup::getCurrentPose 	( 	const std::string &  	end_effector_link = ""	) 	
 
-//   // We can get a list of all the groups in the robot:
-//   ROS_INFO("Available Planning Groups arm:");
-//   std::copy(move_group.getJointModelGroupNames().begin(), move_group.getJointModelGroupNames().end(),
-//             std::ostream_iterator<std::string>(std::cout, ", "));
-//   printf("\n");
+  // We can get a list of all the groups in the robot:
+  ROS_INFO("Available Planning Groups arm:");
+  std::copy(move_group.getJointModelGroupNames().begin(), move_group.getJointModelGroupNames().end(),
+            std::ostream_iterator<std::string>(std::cout, ", "));
+  printf("\n");
 
-//   // We can print the name of the reference frame for this robot.
-//   ROS_INFO("Planning frame gantry: %s", move_group_ga.getPlanningFrame().c_str());
+  // We can print the name of the reference frame for this robot.
+  ROS_INFO("Planning frame gantry: %s", move_group_ga.getPlanningFrame().c_str());
 
-//   // We can also print the name of the end-effector link for this group.
-//   ROS_INFO("End effector link gantry: %s", move_group_ga.getEndEffectorLink().c_str());
+  // We can also print the name of the end-effector link for this group.
+  ROS_INFO("End effector link gantry: %s", move_group_ga.getEndEffectorLink().c_str());
 
-//   // We can get a list of all the groups in the robot:
-//   ROS_INFO("Available Planning Groups gantry:");
-//   std::copy(move_group_ga.getJointModelGroupNames().begin(), move_group_ga.getJointModelGroupNames().end(),
-//             std::ostream_iterator<std::string>(std::cout, ", "));
-//   printf("\n");
+  // We can get a list of all the groups in the robot:
+  ROS_INFO("Available Planning Groups gantry:");
+  std::copy(move_group_ga.getJointModelGroupNames().begin(), move_group_ga.getJointModelGroupNames().end(),
+            std::ostream_iterator<std::string>(std::cout, ", "));
+  printf("\n");
 
-//   printf("Before setting a pose, I will try adding the conveyor as an obstacle in the scene\n");
+  printf("Before setting a pose, I will try adding the conveyor as an obstacle in the scene\n");
 
-//   moveit_msgs::CollisionObject collision_object;
-//   collision_object.header.frame_id = move_group.getPlanningFrame();
-//   collision_object.id = "conveyor";  // The id of the object is used to identify it
-//   // Define a box for the conveyor and add it to the world
-//   shape_msgs::SolidPrimitive primitive;
-//   primitive.type = primitive.BOX;
-//   primitive.dimensions.resize(3);
-//   primitive.dimensions[0] = 0.68;
-//   primitive.dimensions[1] = 9.0;
-//   primitive.dimensions[2] = 0.93;
+  moveit_msgs::CollisionObject collision_object;
+  collision_object.header.frame_id = move_group.getPlanningFrame();
+  collision_object.id = "conveyor";  // The id of the object is used to identify it
+  // Define a box for the conveyor and add it to the world
+  shape_msgs::SolidPrimitive primitive;
+  primitive.type = primitive.BOX;
+  primitive.dimensions.resize(3);
+  primitive.dimensions[0] = 0.68;
+  primitive.dimensions[1] = 9.0;
+  primitive.dimensions[2] = 0.93;
 
-//   // Define a pose for the box (specified relative to frame_id)
-//   geometry_msgs::Pose box_pose;
-//   box_pose.orientation.w = 1.0;
-//   box_pose.position.x = -0.573076;
-//   box_pose.position.y = 0.0;
-//   box_pose.position.z = 0.5;
+  // Define a pose for the box (specified relative to frame_id)
+  geometry_msgs::Pose box_pose;
+  box_pose.orientation.w = 1.0;
+  box_pose.position.x = -0.573076;
+  box_pose.position.y = 0.0;
+  box_pose.position.z = 0.5;
 
-//   collision_object.primitives.push_back(primitive);
-//   collision_object.primitive_poses.push_back(box_pose);
-//   collision_object.operation = collision_object.ADD;
+  collision_object.primitives.push_back(primitive);
+  collision_object.primitive_poses.push_back(box_pose);
+  collision_object.operation = collision_object.ADD;
 
-//   std::vector<moveit_msgs::CollisionObject> collision_objects;
-//   collision_objects.push_back(collision_object);
+  std::vector<moveit_msgs::CollisionObject> collision_objects;
+  collision_objects.push_back(collision_object);
 
-//   // Now, let’s add the collision object into the world
+  // Now, let’s add the collision object into the world
 
-//   printf("Add the collision object into the world");
-//   planning_scene_interface.addCollisionObjects(collision_objects);
-
-
-
-//   // printf("Trying a setPoseTarget operation...\n");
-
-//   // geometry_msgs::Pose target_pose1; //, target_pose2;
-//   // std::vector<geometry_msgs::Pose> target_poses;
-//   // printf("Message created\n");
+  printf("Add the collision object into the world");
+  planning_scene_interface.addCollisionObjects(collision_objects);
 
 
-//   tf2_ros::Buffer buffer;
-//   tf2_ros::TransformListener tfl(buffer);
 
-//   // ros::Time time = ...;
-//   ros::Duration timeout(1.0);
+  // printf("Trying a setPoseTarget operation...\n");
 
-//   nist_gear::VacuumGripperControl gripper_service_;
-//   nist_gear::VacuumGripperState gripper_status_;
-//   ros::ServiceClient gripper_client_;
-//   gripper_client_ = node_kitting_.serviceClient<nist_gear::VacuumGripperControl>("/ariac/kitting/arm/gripper/control");
+  // geometry_msgs::Pose target_pose1; //, target_pose2;
+  // std::vector<geometry_msgs::Pose> target_poses;
+  // printf("Message created\n");
 
-//   moveit_msgs::RobotTrajectory trajectory;
-//   const double jump_threshold = 0.0;
-//   const double eef_step = 0.01;
+
+  tf2_ros::Buffer buffer;
+  tf2_ros::TransformListener tfl(buffer);
+
+  // ros::Time time = ...;
+  ros::Duration timeout(1.0);
+
+  nist_gear::VacuumGripperControl gripper_service_;
+  nist_gear::VacuumGripperState gripper_status_;
+  ros::ServiceClient gripper_client_;
+  gripper_client_ = node_kitting_.serviceClient<nist_gear::VacuumGripperControl>("/ariac/kitting/arm/gripper/control");
+
+  moveit_msgs::RobotTrajectory trajectory;
+  const double jump_threshold = 0.0;
+  const double eef_step = 0.01;
+
+  printf("Test msg 8, some stuff done...\n");
 
 //   // Below code used to read the conveyor breakbeam and the logical camera and then pick a part...not using right now
 //   ////////////////////////////////////////////////////////////////////////////////////
