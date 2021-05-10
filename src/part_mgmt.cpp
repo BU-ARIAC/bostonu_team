@@ -71,7 +71,10 @@ int Parts_List::PopulateBinList(Bin_Parts &bp) {
   std::vector<std::string> keys = bp.GetPartTypes();
   for (std::string key : keys){
     std::cout << "IN POPULATEBINLIST, part: " << key << " " << bp.PartCount(key) << "\n";
-    this->list_part_count["bin"].insert( std::pair<std::string, int>(key, bp.PartCount(key)) );
+    std::pair<std::string, int> pair1;
+    pair1.first = key;
+    pair1.second = bp.PartCount(key)
+    this->list_part_count["bin"].insert(pair1);
   }
   return 1;
 }
