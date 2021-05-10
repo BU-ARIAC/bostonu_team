@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>bostonu_team</name>
+  <name>hw_example</name>
   <version>0.1.0</version>
   <description>A starting "Hello World" example of the BU Team's ARIAC competitor package.</description>
   <maintainer email="mcboyd@bu.edu">Matt Boyd</maintainer>
