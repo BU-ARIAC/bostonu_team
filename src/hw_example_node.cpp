@@ -575,6 +575,7 @@ int main(int argc, char ** argv) {
   if (order_part.part_count > 0) {
   	std::cout << "test msg 8b, in order if: " << order_part.order_number << "\n";
     std::cout << "data returned: " << order_part.order_number << ", " << order_part.part_type << ", " << order_part.agv << ", " << order_part.station << ", " << order_part.current_pose << "\n";
+    ros::Duration(1.0).sleep();
     try {
         tfGeom2 = buffer.lookupTransform("world", order_part.current_pose, ros::Time(0));
     } catch (tf2::TransformException &e) {
