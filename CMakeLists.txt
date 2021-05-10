@@ -26,7 +26,7 @@ catkin_package()
 ## Build ##
 ###########
 
-include_directories(include ${catkin_INCLUDE_DIRS})
+include_directories(include/bostonu_team ${catkin_INCLUDE_DIRS})
 
 ## Declare a C++ executable
 add_executable(hw_example_node src/hw_example_node.cpp src/part_mgmt.cpp src/order_mgmt.cpp)
