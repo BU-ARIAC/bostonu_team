@@ -656,91 +656,92 @@ int main(int argc, char ** argv) {
   } else {
     ROS_WARN_STREAM("Gripper activation failed!");
   }
+  printf("gripper activated, trying to go get teh part now...\n");
 
-  // waypoints.clear();
-  // target_pose10.position.z = 0.785;  // Move over part
-  // waypoints.push_back(target_pose10);
-  // fraction = move_group.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
-  // my_plan.trajectory_ = trajectory;
-  // move_group.execute(my_plan);
-  // printf("done moving near part 2\n");
+  waypoints.clear();
+  target_pose10.position.z = 0.785;  // Move over part
+  waypoints.push_back(target_pose10);
+  fraction = move_group.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
+  my_plan.trajectory_ = trajectory;
+  move_group.execute(my_plan);
+  printf("done moving near part 2\n");
 
-  // std::vector<geometry_msgs::Pose> waypoints3, waypoints4;
-  // geometry_msgs::Pose target_pose11 = target_pose10;
-  // while (!comp_class.gripper_attached) {
-  //   ros::Duration(0.5).sleep();
-  //   target_pose11.position.z -= 0.01;  // Move closer over part
-  //   waypoints3.clear();
-  //   waypoints3.push_back(target_pose11);
-  //   fraction = move_group.computeCartesianPath(waypoints3, eef_step, jump_threshold, trajectory);
-  //   my_plan.trajectory_ = trajectory;
-  //   move_group.execute(my_plan);
-  //   printf("done moving nearer part...\n");
-  // }
+  std::vector<geometry_msgs::Pose> waypoints3, waypoints4;
+  geometry_msgs::Pose target_pose11 = target_pose10;
+  while (!comp_class.gripper_attached) {
+    ros::Duration(0.5).sleep();
+    target_pose11.position.z -= 0.01;  // Move closer over part
+    waypoints3.clear();
+    waypoints3.push_back(target_pose11);
+    fraction = move_group.computeCartesianPath(waypoints3, eef_step, jump_threshold, trajectory);
+    my_plan.trajectory_ = trajectory;
+    move_group.execute(my_plan);
+    printf("done moving nearer part...\n");
+  }
 
-  // geometry_msgs::Pose target_pose12 = target_pose11;
-  // target_pose12.position.z += 0.5;  // Move away from part
-  // waypoints4.push_back(target_pose12);
+  geometry_msgs::Pose target_pose12 = target_pose11;
+  target_pose12.position.z += 0.5;  // Move away from part
+  waypoints4.push_back(target_pose12);
 
-  // geometry_msgs::Pose target_pose13 = target_pose12;
-  // target_pose13.position.z += 0.2;  // Move more away from part
-  // target_pose13.position.x += 0.5;
-  // waypoints4.push_back(target_pose13);
+  geometry_msgs::Pose target_pose13 = target_pose12;
+  target_pose13.position.z += 0.2;  // Move more away from part
+  target_pose13.position.x += 0.5;
+  waypoints4.push_back(target_pose13);
 
-  // fraction = move_group.computeCartesianPath(waypoints4, eef_step, jump_threshold, trajectory);
-  // my_plan.trajectory_ = trajectory;
-  // move_group.execute(my_plan);
-  // printf("hopefully part picked up...\n");
+  fraction = move_group.computeCartesianPath(waypoints4, eef_step, jump_threshold, trajectory);
+  my_plan.trajectory_ = trajectory;
+  move_group.execute(my_plan);
+  printf("hopefully part picked up...\n");
 
-  // ros::Duration(1.0).sleep();
+  ros::Duration(1.0).sleep();
 
-  // waypoints4.clear();
-  // geometry_msgs::Pose target_pose14 = target_pose13;
-  // target_pose14.position.y = worldPose.transform.translation.y;  // Move toward agv
-  // waypoints4.push_back(target_pose14);
+  waypoints4.clear();
+  geometry_msgs::Pose target_pose14 = target_pose13;
+  target_pose14.position.y = worldPose.transform.translation.y;  // Move toward agv
+  waypoints4.push_back(target_pose14);
 
-  // geometry_msgs::Pose target_pose15 = target_pose14;
-  // target_pose15.position.x = worldPose.transform.translation.x;  // Move toward agv
-  // waypoints4.push_back(target_pose15);
+  geometry_msgs::Pose target_pose15 = target_pose14;
+  target_pose15.position.x = worldPose.transform.translation.x;  // Move toward agv
+  waypoints4.push_back(target_pose15);
 
-  // geometry_msgs::Pose target_pose16 = target_pose15;
-  // target_pose16.position.x = worldPose.transform.translation.x;  // Move toward spot on agv
-  // target_pose16.position.y = worldPose.transform.translation.y;
-  // target_pose16.position.z = worldPose.transform.translation.z + 0.1;
-  // target_pose16.orientation.x = -0.0110788;
-  // target_pose16.orientation.y = 0.711468;
-  // target_pose16.orientation.z = 0.011894;
-  // target_pose16.orientation.w = 0.702532;
-  // waypoints4.push_back(target_pose16);
+  geometry_msgs::Pose target_pose16 = target_pose15;
+  target_pose16.position.x = worldPose.transform.translation.x;  // Move toward spot on agv
+  target_pose16.position.y = worldPose.transform.translation.y;
+  target_pose16.position.z = worldPose.transform.translation.z + 0.1;
+  target_pose16.orientation.x = -0.0110788;
+  target_pose16.orientation.y = 0.711468;
+  target_pose16.orientation.z = 0.011894;
+  target_pose16.orientation.w = 0.702532;
+  waypoints4.push_back(target_pose16);
 
-  // fraction = move_group.computeCartesianPath(waypoints4, eef_step, jump_threshold, trajectory);
-  // my_plan.trajectory_ = trajectory;
-  // move_group.execute(my_plan);
-  // printf("hopefully part above agv...\n");
+  fraction = move_group.computeCartesianPath(waypoints4, eef_step, jump_threshold, trajectory);
+  my_plan.trajectory_ = trajectory;
+  move_group.execute(my_plan);
+  printf("hopefully part above agv...\n");
 
-  // gripper_service_.request.enable = false;
-  // gripper_client_.call(gripper_service_);
-  // if (gripper_service_.response.success) {
-  //   ROS_INFO_STREAM("Gripper deactivated!");
-  // } else {
-  //   ROS_WARN_STREAM("Gripper deactivation failed!");
-  // }
-  // printf("hopefully part on agv...\n");
+  gripper_service_.request.enable = false;
+  gripper_client_.call(gripper_service_);
+  if (gripper_service_.response.success) {
+    ROS_INFO_STREAM("Gripper deactivated!");
+  } else {
+    ROS_WARN_STREAM("Gripper deactivation failed!");
+  }
+  printf("hopefully part on agv...\n");
 
-  // waypoints4.clear();
-  // geometry_msgs::Pose target_pose17 = target_pose16;
-  // target_pose17.position.z += 0.5;  // Move away from part
-  // waypoints4.push_back(target_pose17);
+  waypoints4.clear();
+  geometry_msgs::Pose target_pose17 = target_pose16;
+  target_pose17.position.z += 0.5;  // Move away from part
+  waypoints4.push_back(target_pose17);
 
-  // geometry_msgs::Pose target_pose18 = target_pose17;
-  // target_pose18.position.z += 0.2;  // Move more away from part
-  // target_pose18.position.x += 0.5;
-  // waypoints4.push_back(target_pose18);
+  geometry_msgs::Pose target_pose18 = target_pose17;
+  target_pose18.position.z += 0.2;  // Move more away from part
+  target_pose18.position.x += 0.5;
+  waypoints4.push_back(target_pose18);
 
-  // fraction = move_group.computeCartesianPath(waypoints4, eef_step, jump_threshold, trajectory);
-  // my_plan.trajectory_ = trajectory;
-  // move_group.execute(my_plan);
-  // printf("hopefully moved away from part...\n");
+  fraction = move_group.computeCartesianPath(waypoints4, eef_step, jump_threshold, trajectory);
+  my_plan.trajectory_ = trajectory;
+  move_group.execute(my_plan);
+  printf("hopefully moved away from part...\n");
 
   
 
