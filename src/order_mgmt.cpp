@@ -149,7 +149,7 @@ OrderPart Orders::getNextPart(int shipment_type) {
             for (int i = 0; i < partTypeCount; i++) {
                 std::pair<std::string, geometry_msgs::Pose> ptp_pair = ordershipment.part_type_pose_vect[i];
                 std::string part_type = ptp_pair.first;
-                std::cout << "In getNextPart, part_type: " << part_type << "and count? " << pl_->list_part_count["bin"][part_type] << "\n";
+                std::cout << "In getNextPart, part_type: " << part_type << " and count? " << pl_->list_part_count["bin"].find(part_type)->second << "\n";
                 if (pl_->list_part_count["bin"][part_type] > 0) {
                     std::cout << "Somehow we're in the depth of getNextPart: " << part_type << "\n";
                     // Set values to return
