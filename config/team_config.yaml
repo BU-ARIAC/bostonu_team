@@ -1,0 +1,30 @@
+sensors:
+  # Bins 1-4
+  logical_camera_0:
+    type: logical_camera
+    pose:
+      xyz: [-2.286283, 2.963994, 1.801095]
+      rpy: [3.141593, 1.570792, 0.000000]
+  
+  # Bins 5-8
+  logical_camera_1:
+    type: logical_camera
+    pose:
+      xyz: [-2.286283, -2.963994, 1.801095]
+      rpy: [3.141593, 1.570792, 0.000000]
+
+  # Conveyor
+  breakbeam_0:
+    type: break_beam
+    pose:
+      xyz: [-0.900000, 4.000000, 0.921000]
+      rpy: [0.000000, 0.000000, 0]
+  
+  logical_camera_2:
+    type: logical_camera
+    pose:
+      xyz: [-0.500000, 3.000000, 2.000000]
+      rpy: [3.141593, 1.570792, 0.000000]
+
+robot_camera:
+  enable: false
