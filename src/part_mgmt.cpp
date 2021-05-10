@@ -73,7 +73,7 @@ int Parts_List::PopulateBinList(Bin_Parts &bp) {
     std::cout << "IN POPULATEBINLIST, part: " << key << " " << bp.PartCount(key) << "\n";
     std::pair<std::string, int> pair1;
     pair1.first = key;
-    pair1.second = bp.PartCount(key)
+    pair1.second = bp.PartCount(key);
     this->list_part_count["bin"].insert(pair1);
   }
   return 1;

@@ -573,7 +573,7 @@ int main(int argc, char ** argv) {
   printf("test msg 8a, order_part.part_count: %d\n", order_part.part_count);
 
   if (order_part.part_count > 0) {
-  	printf("test msg 8b, in order if: %s\n", order_part.order_number);
+  	std::cout << "test msg 8b, in order if: " << order_part.order_number << "\n";
     std::cout << "data returned: " << order_part.order_number << ", " << order_part.part_type << ", " << order_part.agv << ", " << order_part.station << ", " << order_part.current_pose << "\n";
     try {
         tfGeom2 = buffer.lookupTransform("world", order_part.current_pose, ros::Time(0));
