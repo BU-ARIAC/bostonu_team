@@ -587,7 +587,7 @@ int main(int argc, char ** argv) {
   }
 
   std::vector<geometry_msgs::Pose> waypoints;
-  printf("Test msg 8, waypoint vector created...\n");
+  printf("Test msg 9, waypoint vector created...\n");
 
 //   // ROS_INFO("End effector pose->position (x,y,z): (%f,%f,%f)", p.pose.position.x, p.pose.position.y, p.pose.position.z);
 //   // ROS_INFO("End effector pose->orientation (x,y,z,w): (%f,%f,%f,%f)", p.pose.orientation.x, p.pose.orientation.y, p.pose.orientation.z, p.pose.orientation.w);
@@ -606,6 +606,8 @@ int main(int argc, char ** argv) {
   bool success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
   move_group.move();
 
+  ros::Duration(1.0).sleep();
+
   geometry_msgs::Pose target_pose5 = target_pose;
   target_pose5.position.x = -1.3;  // Swing around to AGV side
   target_pose5.position.y = 0.9;  // Swing around to AGV side
@@ -614,12 +616,16 @@ int main(int argc, char ** argv) {
   move_group.move();
   printf("move 2 done...\n");
 
+  ros::Duration(1.0).sleep();
+
   geometry_msgs::Pose target_pose6 = target_pose5;
   target_pose6.position.x = -2.26;  // Swing around to AGV side
   move_group.setPoseTarget(target_pose6);
   success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
   move_group.move();
   printf("swing to agv done...\n");
+
+  ros::Duration(1.0).sleep();
 
   waypoints.push_back(target_pose6);
 
