@@ -390,7 +390,7 @@ int main(int argc, char ** argv) {
 
   // Now, let’s add the collision object into the world
 
-  printf("Add the collision object into the world");
+  printf("Add the collision object into the world\n");
   planning_scene_interface.addCollisionObjects(collision_objects);
 
 
@@ -565,169 +565,170 @@ int main(int argc, char ** argv) {
 //   ////////////////////////////////////////////////////////////////////////////////////
 //   sleep(1);
 
-//   OrderPart order_part;
-//   order_part = orders.getNextPart(order_kit_order);
-//   geometry_msgs::TransformStamped tfGeom2;
-//   geometry_msgs::TransformStamped worldPose;
+  OrderPart order_part;
+  order_part = orders.getNextPart(order_kit_order);
+  geometry_msgs::TransformStamped tfGeom2;
+  geometry_msgs::TransformStamped worldPose;
 
-//   if (order_part.part_count > 0) {
-//     std::cout << "data returned: " << order_part.order_number << ", " << order_part.part_type << ", " << order_part.agv << ", " << order_part.station << ", " << order_part.current_pose << "\n";
-//     try {
-//         tfGeom2 = buffer.lookupTransform("world", order_part.current_pose, ros::Time(0));
-//     } catch (tf2::TransformException &e) {
-//         printf("ERROR\n");
-//         printf("%s\n",e.what());
-//     }
-//     std::cout << "current: " << tfGeom2.transform.translation.x << ", " << tfGeom2.transform.translation.y << ", " << tfGeom2.transform.translation.z << "\n";
-//     // get the pose of the object in the tray from the order
-//     buffer.transform(order_part.destination_pose, worldPose, "world");
+  if (order_part.part_count > 0) {
+    std::cout << "data returned: " << order_part.order_number << ", " << order_part.part_type << ", " << order_part.agv << ", " << order_part.station << ", " << order_part.current_pose << "\n";
+    try {
+        tfGeom2 = buffer.lookupTransform("world", order_part.current_pose, ros::Time(0));
+    } catch (tf2::TransformException &e) {
+        printf("ERROR\n");
+        printf("%s\n",e.what());
+    }
+    std::cout << "current: " << tfGeom2.transform.translation.x << ", " << tfGeom2.transform.translation.y << ", " << tfGeom2.transform.translation.z << "\n";
+    // get the pose of the object in the tray from the order
+    buffer.transform(order_part.destination_pose, worldPose, "world");
     
-//     std::cout << "Transform.translation in tray2: " << worldPose.transform.translation.x << ", " << worldPose.transform.translation.y << ", " << worldPose.transform.translation.z << "\n";
-//     std::cout << "Transform.orientation in tray2: " << worldPose.transform.rotation.x << ", " << worldPose.transform.rotation.y << ", " << worldPose.transform.rotation.z << ", " << worldPose.transform.rotation.w << "\n";
-//   }
+    std::cout << "Transform.translation in tray2: " << worldPose.transform.translation.x << ", " << worldPose.transform.translation.y << ", " << worldPose.transform.translation.z << "\n";
+    std::cout << "Transform.orientation in tray2: " << worldPose.transform.rotation.x << ", " << worldPose.transform.rotation.y << ", " << worldPose.transform.rotation.z << ", " << worldPose.transform.rotation.w << "\n";
+  }
 
-//   std::vector<geometry_msgs::Pose> waypoints;
+  std::vector<geometry_msgs::Pose> waypoints;
+  printf("Test msg 8, waypoint vector created...\n");
 
 //   // ROS_INFO("End effector pose->position (x,y,z): (%f,%f,%f)", p.pose.position.x, p.pose.position.y, p.pose.position.z);
 //   // ROS_INFO("End effector pose->orientation (x,y,z,w): (%f,%f,%f,%f)", p.pose.orientation.x, p.pose.orientation.y, p.pose.orientation.z, p.pose.orientation.w);
 
-//   // First, swing around to the agv side
-//   geometry_msgs::Pose target_pose;
-//   target_pose.position.x = p.pose.position.x;
-//   target_pose.position.y = p.pose.position.y;
-//   target_pose.position.z = p.pose.position.z + 0.3;
-//   target_pose.orientation.x = -0.0110788;
-//   target_pose.orientation.y = 0.711468;
-//   target_pose.orientation.z = 0.011894;
-//   target_pose.orientation.w = 0.702532;
-//   move_group.setPoseTarget(target_pose);
-//   moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-//   bool success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-//   move_group.move();
+  // First, swing around to the agv side
+  geometry_msgs::Pose target_pose;
+  target_pose.position.x = p.pose.position.x;
+  target_pose.position.y = p.pose.position.y;
+  target_pose.position.z = p.pose.position.z + 0.3;
+  target_pose.orientation.x = -0.0110788;
+  target_pose.orientation.y = 0.711468;
+  target_pose.orientation.z = 0.011894;
+  target_pose.orientation.w = 0.702532;
+  move_group.setPoseTarget(target_pose);
+  moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+  bool success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+  move_group.move();
 
-//   geometry_msgs::Pose target_pose5 = target_pose;
-//   target_pose5.position.x = -1.3;  // Swing around to AGV side
-//   target_pose5.position.y = 0.9;  // Swing around to AGV side
-//   move_group.setPoseTarget(target_pose5);
-//   success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-//   move_group.move();
-//   printf("move 2 done...\n");
+  geometry_msgs::Pose target_pose5 = target_pose;
+  target_pose5.position.x = -1.3;  // Swing around to AGV side
+  target_pose5.position.y = 0.9;  // Swing around to AGV side
+  move_group.setPoseTarget(target_pose5);
+  success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+  move_group.move();
+  printf("move 2 done...\n");
 
-//   geometry_msgs::Pose target_pose6 = target_pose5;
-//   target_pose6.position.x = -2.26;  // Swing around to AGV side
-//   move_group.setPoseTarget(target_pose6);
-//   success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-//   move_group.move();
-//   printf("swing to agv done...\n");
+  geometry_msgs::Pose target_pose6 = target_pose5;
+  target_pose6.position.x = -2.26;  // Swing around to AGV side
+  move_group.setPoseTarget(target_pose6);
+  success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+  move_group.move();
+  printf("swing to agv done...\n");
 
-//   waypoints.push_back(target_pose6);
+  waypoints.push_back(target_pose6);
 
-//   geometry_msgs::Pose target_pose1 = target_pose6;
-//   target_pose1.position.y = tfGeom2.transform.translation.y;  // Just move left
-//   waypoints.push_back(target_pose1); 
+  geometry_msgs::Pose target_pose1 = target_pose6;
+  target_pose1.position.y = tfGeom2.transform.translation.y;  // Just move left
+  waypoints.push_back(target_pose1); 
 
-//   geometry_msgs::Pose target_pose10 = target_pose1;
-//   target_pose10.position.x = tfGeom2.transform.translation.x;
-//   target_pose10.position.z = tfGeom2.transform.translation.z+.1;  // Move over part
-//   waypoints.push_back(target_pose10);
+  geometry_msgs::Pose target_pose10 = target_pose1;
+  target_pose10.position.x = tfGeom2.transform.translation.x;
+  target_pose10.position.z = tfGeom2.transform.translation.z+.1;  // Move over part
+  waypoints.push_back(target_pose10);
 
-//   double fraction = move_group.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
-//   my_plan.trajectory_ = trajectory;
-//   move_group.execute(my_plan);
-//   printf("done moving near part\n");
+  double fraction = move_group.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
+  my_plan.trajectory_ = trajectory;
+  move_group.execute(my_plan);
+  printf("done moving near part\n");
 
-//   gripper_service_.request.enable = true;
-//   gripper_client_.call(gripper_service_);
-//   if (gripper_service_.response.success) {
-//     ROS_INFO_STREAM("Gripper activated!");
-//   } else {
-//     ROS_WARN_STREAM("Gripper activation failed!");
-//   }
+  gripper_service_.request.enable = true;
+  gripper_client_.call(gripper_service_);
+  if (gripper_service_.response.success) {
+    ROS_INFO_STREAM("Gripper activated!");
+  } else {
+    ROS_WARN_STREAM("Gripper activation failed!");
+  }
 
-//   waypoints.clear();
-//   target_pose10.position.z = 0.785;  // Move over part
-//   waypoints.push_back(target_pose10);
-//   fraction = move_group.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
-//   my_plan.trajectory_ = trajectory;
-//   move_group.execute(my_plan);
-//   printf("done moving near part 2\n");
+  waypoints.clear();
+  target_pose10.position.z = 0.785;  // Move over part
+  waypoints.push_back(target_pose10);
+  fraction = move_group.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
+  my_plan.trajectory_ = trajectory;
+  move_group.execute(my_plan);
+  printf("done moving near part 2\n");
 
-//   std::vector<geometry_msgs::Pose> waypoints3, waypoints4;
-//   geometry_msgs::Pose target_pose11 = target_pose10;
-//   while (!comp_class.gripper_attached) {
-//     ros::Duration(0.5).sleep();
-//     target_pose11.position.z -= 0.01;  // Move closer over part
-//     waypoints3.clear();
-//     waypoints3.push_back(target_pose11);
-//     fraction = move_group.computeCartesianPath(waypoints3, eef_step, jump_threshold, trajectory);
-//     my_plan.trajectory_ = trajectory;
-//     move_group.execute(my_plan);
-//     printf("done moving nearer part...\n");
-//   }
+  std::vector<geometry_msgs::Pose> waypoints3, waypoints4;
+  geometry_msgs::Pose target_pose11 = target_pose10;
+  while (!comp_class.gripper_attached) {
+    ros::Duration(0.5).sleep();
+    target_pose11.position.z -= 0.01;  // Move closer over part
+    waypoints3.clear();
+    waypoints3.push_back(target_pose11);
+    fraction = move_group.computeCartesianPath(waypoints3, eef_step, jump_threshold, trajectory);
+    my_plan.trajectory_ = trajectory;
+    move_group.execute(my_plan);
+    printf("done moving nearer part...\n");
+  }
 
-//   geometry_msgs::Pose target_pose12 = target_pose11;
-//   target_pose12.position.z += 0.5;  // Move away from part
-//   waypoints4.push_back(target_pose12);
+  geometry_msgs::Pose target_pose12 = target_pose11;
+  target_pose12.position.z += 0.5;  // Move away from part
+  waypoints4.push_back(target_pose12);
 
-//   geometry_msgs::Pose target_pose13 = target_pose12;
-//   target_pose13.position.z += 0.2;  // Move more away from part
-//   target_pose13.position.x += 0.5;
-//   waypoints4.push_back(target_pose13);
+  geometry_msgs::Pose target_pose13 = target_pose12;
+  target_pose13.position.z += 0.2;  // Move more away from part
+  target_pose13.position.x += 0.5;
+  waypoints4.push_back(target_pose13);
 
-//   fraction = move_group.computeCartesianPath(waypoints4, eef_step, jump_threshold, trajectory);
-//   my_plan.trajectory_ = trajectory;
-//   move_group.execute(my_plan);
-//   printf("hopefully part picked up...\n");
+  fraction = move_group.computeCartesianPath(waypoints4, eef_step, jump_threshold, trajectory);
+  my_plan.trajectory_ = trajectory;
+  move_group.execute(my_plan);
+  printf("hopefully part picked up...\n");
 
-//   ros::Duration(1.0).sleep();
+  ros::Duration(1.0).sleep();
 
-//   waypoints4.clear();
-//   geometry_msgs::Pose target_pose14 = target_pose13;
-//   target_pose14.position.y = worldPose.transform.translation.y;  // Move toward agv
-//   waypoints4.push_back(target_pose14);
+  waypoints4.clear();
+  geometry_msgs::Pose target_pose14 = target_pose13;
+  target_pose14.position.y = worldPose.transform.translation.y;  // Move toward agv
+  waypoints4.push_back(target_pose14);
 
-//   geometry_msgs::Pose target_pose15 = target_pose14;
-//   target_pose15.position.x = worldPose.transform.translation.x;  // Move toward agv
-//   waypoints4.push_back(target_pose15);
+  geometry_msgs::Pose target_pose15 = target_pose14;
+  target_pose15.position.x = worldPose.transform.translation.x;  // Move toward agv
+  waypoints4.push_back(target_pose15);
 
-//   geometry_msgs::Pose target_pose16 = target_pose15;
-//   target_pose16.position.x = worldPose.transform.translation.x;  // Move toward spot on agv
-//   target_pose16.position.y = worldPose.transform.translation.y;
-//   target_pose16.position.z = worldPose.transform.translation.z + 0.1;
-//   target_pose16.orientation.x = -0.0110788;
-//   target_pose16.orientation.y = 0.711468;
-//   target_pose16.orientation.z = 0.011894;
-//   target_pose16.orientation.w = 0.702532;
-//   waypoints4.push_back(target_pose16);
+  geometry_msgs::Pose target_pose16 = target_pose15;
+  target_pose16.position.x = worldPose.transform.translation.x;  // Move toward spot on agv
+  target_pose16.position.y = worldPose.transform.translation.y;
+  target_pose16.position.z = worldPose.transform.translation.z + 0.1;
+  target_pose16.orientation.x = -0.0110788;
+  target_pose16.orientation.y = 0.711468;
+  target_pose16.orientation.z = 0.011894;
+  target_pose16.orientation.w = 0.702532;
+  waypoints4.push_back(target_pose16);
 
-//   fraction = move_group.computeCartesianPath(waypoints4, eef_step, jump_threshold, trajectory);
-//   my_plan.trajectory_ = trajectory;
-//   move_group.execute(my_plan);
-//   printf("hopefully part above agv...\n");
+  fraction = move_group.computeCartesianPath(waypoints4, eef_step, jump_threshold, trajectory);
+  my_plan.trajectory_ = trajectory;
+  move_group.execute(my_plan);
+  printf("hopefully part above agv...\n");
 
-//   gripper_service_.request.enable = false;
-//   gripper_client_.call(gripper_service_);
-//   if (gripper_service_.response.success) {
-//     ROS_INFO_STREAM("Gripper deactivated!");
-//   } else {
-//     ROS_WARN_STREAM("Gripper deactivation failed!");
-//   }
-//   printf("hopefully part on agv...\n");
+  gripper_service_.request.enable = false;
+  gripper_client_.call(gripper_service_);
+  if (gripper_service_.response.success) {
+    ROS_INFO_STREAM("Gripper deactivated!");
+  } else {
+    ROS_WARN_STREAM("Gripper deactivation failed!");
+  }
+  printf("hopefully part on agv...\n");
 
-//   waypoints4.clear();
-//   geometry_msgs::Pose target_pose17 = target_pose16;
-//   target_pose17.position.z += 0.5;  // Move away from part
-//   waypoints4.push_back(target_pose17);
+  waypoints4.clear();
+  geometry_msgs::Pose target_pose17 = target_pose16;
+  target_pose17.position.z += 0.5;  // Move away from part
+  waypoints4.push_back(target_pose17);
 
-//   geometry_msgs::Pose target_pose18 = target_pose17;
-//   target_pose18.position.z += 0.2;  // Move more away from part
-//   target_pose18.position.x += 0.5;
-//   waypoints4.push_back(target_pose18);
+  geometry_msgs::Pose target_pose18 = target_pose17;
+  target_pose18.position.z += 0.2;  // Move more away from part
+  target_pose18.position.x += 0.5;
+  waypoints4.push_back(target_pose18);
 
-//   fraction = move_group.computeCartesianPath(waypoints4, eef_step, jump_threshold, trajectory);
-//   my_plan.trajectory_ = trajectory;
-//   move_group.execute(my_plan);
-//   printf("hopefully moved away from part...\n");
+  fraction = move_group.computeCartesianPath(waypoints4, eef_step, jump_threshold, trajectory);
+  my_plan.trajectory_ = trajectory;
+  move_group.execute(my_plan);
+  printf("hopefully moved away from part...\n");
 
   
 
