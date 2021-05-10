@@ -152,8 +152,8 @@ OrderPart Orders::getNextPart(int shipment_type) {
                 std::cout << "In getNextPart, part_type: " << part_type << " and count? " << pl_->list_part_count["bin"].find(part_type)->second << "\n";
                 for(std::map<std::string,int>::iterator it = pl_->list_part_count["bin"].begin(); it != pl_->list_part_count["bin"].end(); ++it) {
                   std::cout << "In getNextPart, all parts in list_part_count[bin]: \n";
-                  std::cout << "Key: " << it->first << std::endl();
-                  std::cout << "Value: " << it->second << std::endl();
+                  std::cout << "Key: " << it->first << "\n";
+                  std::cout << "Value: " << it->second << "\n";
                 }
                 if (pl_->list_part_count["bin"].find(part_type)->second >= 0) {
                     std::cout << "Somehow we're in the depth of getNextPart: " << part_type << "\n";
