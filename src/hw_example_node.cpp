@@ -746,9 +746,9 @@ int main(int argc, char ** argv) {
   printf("hopefully moved away from part...\n");
 
   ros::ServiceClient submit_client = node.serviceClient<nist_gear::AGVToAssemblyStation>("/ariac/"+order_part.agv+"/submit_shipment");
-  if (!start_client.exists()) {
+  if (!submit_client.exists()) {
     ROS_INFO("Waiting for the client to be ready...");
-    start_client.waitForExistence();
+    submit_client.waitForExistence();
     ROS_INFO("Service started.");
   }
 
@@ -756,7 +756,7 @@ int main(int argc, char ** argv) {
   srv.request.shipment_type = order_part.order_number;
   srv.request.assembly_station_name = order_part.station;
 
-  start_client.call(srv);
+  submit_client.call(srv);
 
   if (!srv.response.success) {
       ROS_ERROR_STREAM("Service failed!");
