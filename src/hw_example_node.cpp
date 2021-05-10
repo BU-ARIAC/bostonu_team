@@ -760,8 +760,11 @@ int main(int argc, char ** argv) {
 
   if (!srv.response.success) {
       ROS_ERROR_STREAM("Service failed!");
-  } else
+      printf("in submit shipment error");
+  } else {
+  	  printf("in submit shipment success");
       ROS_INFO("Service succeeded.");
+  }
 
   return 0;
 }
