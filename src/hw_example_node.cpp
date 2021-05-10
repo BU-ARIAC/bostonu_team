@@ -229,7 +229,7 @@ int main(int argc, char ** argv) {
   printf("Test msg 2, about to start node...\n");
   
   // Last argument is the default name of the node.
-//   ros::init(argc, argv, "hw_example_node");
+  ros::init(argc, argv, "hw_example_node");
 
 // //   // First initialize the parts list
 //   Parts_List pl;
