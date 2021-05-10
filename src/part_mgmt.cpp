@@ -70,6 +70,7 @@ int Bin_Parts::PartUsed(const std::string &part_type) {
 int Parts_List::PopulateBinList(Bin_Parts &bp) {
   std::vector<std::string> keys = bp.GetPartTypes();
   for (std::string key : keys){
+    std::cout << "IN POPULATEBINLIST, part: " << key << "\n";
     this->list_part_count["bin"].insert( std::pair<std::string, int>(key, bp.PartCount(key)) );
   }
   return 1;
