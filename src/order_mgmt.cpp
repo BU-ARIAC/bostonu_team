@@ -139,7 +139,7 @@ std::string Orders::findHighestPriorityOrder() {
 OrderPart Orders::getNextPart(int shipment_type) {
     std::string highestPriorityOrder = findHighestPriorityOrder();
     std::cout << "In getNextPart, highestPriorityOrder: " << highestPriorityOrder << ", but using order_0 anyway...\n";
-    highestPriorityOrder = "order_0";  // MB: Remove for production
+    // highestPriorityOrder = "order_0";  // MB: Remove for production
     OrderPart op_;
     for (auto ordershipment : this->order_list[highestPriorityOrder]) {
         std::cout << "In getNextPart, in first for loop\n"; 
