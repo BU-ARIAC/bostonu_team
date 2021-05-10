@@ -592,19 +592,21 @@ int main(int argc, char ** argv) {
 //   // ROS_INFO("End effector pose->position (x,y,z): (%f,%f,%f)", p.pose.position.x, p.pose.position.y, p.pose.position.z);
 //   // ROS_INFO("End effector pose->orientation (x,y,z,w): (%f,%f,%f,%f)", p.pose.orientation.x, p.pose.orientation.y, p.pose.orientation.z, p.pose.orientation.w);
 
-  // First, swing around to the agv side
-  // geometry_msgs::Pose target_pose;
-  // target_pose.position.x = p.pose.position.x;
-  // target_pose.position.y = p.pose.position.y;
-  // target_pose.position.z = p.pose.position.z + 0.3;
-  // target_pose.orientation.x = -0.0110788;
-  // target_pose.orientation.y = 0.711468;
-  // target_pose.orientation.z = 0.011894;
-  // target_pose.orientation.w = 0.702532;
-  // move_group.setPoseTarget(target_pose);
-  // moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-  // bool success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-  // move_group.move();
+  First, swing around to the agv side
+  geometry_msgs::Pose target_pose;
+  target_pose.position.x = p.pose.position.x;
+  target_pose.position.y = p.pose.position.y;
+  target_pose.position.z = p.pose.position.z + 0.3;
+  target_pose.orientation.x = -0.0110788;
+  target_pose.orientation.y = 0.711468;
+  target_pose.orientation.z = 0.011894;
+  target_pose.orientation.w = 0.702532;
+  move_group.setPoseTarget(target_pose);
+  moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+  bool success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+  move_group.move();
+
+  printf("Test msg 10, 1 move done?...\n");
 
   // ros::Duration(1.0).sleep();
 
