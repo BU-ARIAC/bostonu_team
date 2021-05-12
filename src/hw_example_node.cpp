@@ -228,39 +228,36 @@ private:
 int main(int argc, char ** argv) {
 
   test_om();
-  printf("Test msg 2, about to start node...\n");
   
   // Last argument is the default name of the node.
   ros::init(argc, argv, "hw_example_node");
 
-  printf("Test msg 3, node started...\n");
-
-// //   // First initialize the parts list
+  // First initialize the parts list
   Parts_List pl;
 
-  printf("Test msg 4, pl created...\n");
-
-// //   // Call logical cameras over bins and get all parts
+  // Call logical cameras over bins and get all parts
   Bin_Parts bp;
 
-  printf("Test msg 5, bp created...\n");
-
-// //   // Then build the list of part counts in the bins
+  // Then build the list of part counts in the bins
   pl.PopulateBinList(bp);
 
-  printf("Test msg 6, bins populated...\n");
+  for(std::map<std::string,int>::iterator it = pl.list_part_count["bin"].begin(); it != pl.list_part_count["bin"].end(); ++it) {
+    std::cout << "In getNextPart, all parts in list_part_count[bin]: \n";
+    std::cout << "Key: " << it->first << "\n";
+    std::cout << "Value: " << it->second << "\n";
+  }
 
-//   int test_dbp = pl.DecrementBinPart("assembly_regulator_red");
-//   std::cout << "Decrement count of assembly_regulator_red, should be 3? " << std::to_string(test_dbp) << "\n";
+  // int test_dbp = pl.DecrementBinPart("assembly_regulator_red");
+  // std::cout << "Decrement count of assembly_regulator_red, should be 3? " << std::to_string(test_dbp) << "\n";
 
 
-// //   // Print out some part frames to verify they're correct...
-//   std::vector<std::string> test = bp.GetFrames("assembly_regulator_red");
-//   std::cout << test[0] << "\n" << bp.GetFrame("assembly_regulator_red") << "\n" << std::to_string(bp.PartCount("assembly_regulator_blue")) << "\n";
+  // // Print out some part frames to verify they're correct...
+  // std::vector<std::string> test = bp.GetFrames("assembly_regulator_red");
+  // std::cout << test[0] << "\n" << bp.GetFrame("assembly_regulator_red") << "\n" << std::to_string(bp.PartCount("assembly_regulator_blue")) << "\n";
 
   ros::NodeHandle node;
 
-  // printf("asm order should be 2: %d\n", order_asm_order);
+  printf("asm order should be 2: %d\n", order_asm_order);
   Orders orders(pl, bp);
   printf("orders max priority: %d\n", orders.max_priority);
 
@@ -303,7 +300,7 @@ int main(int argc, char ** argv) {
     "/ariac/kitting/arm/gripper/state", 10,
     &MyCompetitionClass::kitting_gripper_callback, &comp_class);
 
-  printf("Test msg 7, setup complete...\n");
+
   ROS_INFO("Setup complete.");
   start_competition(node);
 //   ros::spin();  // This executes callbacks on new data until ctrl-c.
@@ -392,7 +389,7 @@ int main(int argc, char ** argv) {
 
   // Now, let’s add the collision object into the world
 
-  printf("Add the collision object into the world\n");
+  printf("Add the collision object into the world");
   planning_scene_interface.addCollisionObjects(collision_objects);
 
 
@@ -419,165 +416,159 @@ int main(int argc, char ** argv) {
   const double jump_threshold = 0.0;
   const double eef_step = 0.01;
 
-  printf("Test msg 8, some stuff done...\n");
+  // Below code used to read the conveyor breakbeam and the logical camera and then pick a part...not using right now
+  ////////////////////////////////////////////////////////////////////////////////////
+  // int bb_old = 0;
+  // while (comp_class.breakbeam_triggered < 2) {
+  //   if (bb_old != comp_class.breakbeam_triggered) {
+  //     // Below code works to get parts off the conveyor belt...well one part at least
+  //     // Cannot use right now....
+  //     ////////////////////////////////////////////////////////////////////////////////////
+  //     //call read conveyor logical
+  //     // const nist_gear::LogicalCameraImage::ConstPtr & image_msg = ros::topic::waitForMessage<nist_gear::LogicalCameraImage>("/ariac/logical_camera_2");
+  //     // for (auto model : image_msg->models) {
+  //     //   ROS_INFO_STREAM("model: " << model);
+  //     //   printf("position: (%f, %f, %f)\n", model.pose.position.x, model.pose.position.y, model.pose.position.z);
+  //     // }
+  //     // ROS_INFO_STREAM_THROTTLE(1,
+  //     //   "Logical camera: '" << image_msg->models.size() << "' objects.");
+  //     // bb_old = comp_class.breakbeam_triggered;
+  //     // printf("*** in if %d***\n", bb_old);
 
-//   // Below code used to read the conveyor breakbeam and the logical camera and then pick a part...not using right now
-//   ////////////////////////////////////////////////////////////////////////////////////
-//   // int bb_old = 0;
-//   // while (comp_class.breakbeam_triggered < 2) {
-//   //   if (bb_old != comp_class.breakbeam_triggered) {
-//   //     // Below code works to get parts off the conveyor belt...well one part at least
-//   //     // Cannot use right now....
-//   //     ////////////////////////////////////////////////////////////////////////////////////
-//   //     //call read conveyor logical
-//   //     // const nist_gear::LogicalCameraImage::ConstPtr & image_msg = ros::topic::waitForMessage<nist_gear::LogicalCameraImage>("/ariac/logical_camera_2");
-//   //     // for (auto model : image_msg->models) {
-//   //     //   ROS_INFO_STREAM("model: " << model);
-//   //     //   printf("position: (%f, %f, %f)\n", model.pose.position.x, model.pose.position.y, model.pose.position.z);
-//   //     // }
-//   //     // ROS_INFO_STREAM_THROTTLE(1,
-//   //     //   "Logical camera: '" << image_msg->models.size() << "' objects.");
-//   //     // bb_old = comp_class.breakbeam_triggered;
-//   //     // printf("*** in if %d***\n", bb_old);
+  //     // nist_gear::VacuumGripperControl gripper_service_;
+  //     // nist_gear::VacuumGripperState gripper_status_;
+  //     // ros::ServiceClient gripper_client_;
 
-//   //     // nist_gear::VacuumGripperControl gripper_service_;
-//   //     // nist_gear::VacuumGripperState gripper_status_;
-//   //     // ros::ServiceClient gripper_client_;
+  //     // gripper_client_ = node_kitting_.serviceClient<nist_gear::VacuumGripperControl>("/ariac/kitting/arm/gripper/control");
+  //     // gripper_service_.request.enable = true;
+  //     // gripper_client_.call(gripper_service_);
+  //     // if (gripper_service_.response.success) {
+  //     //   ROS_INFO_STREAM("Gripper activated!");
+  //     // } else {
+  //     //   ROS_WARN_STREAM("Gripper activation failed!");
+  //     // }
 
-//   //     // gripper_client_ = node_kitting_.serviceClient<nist_gear::VacuumGripperControl>("/ariac/kitting/arm/gripper/control");
-//   //     // gripper_service_.request.enable = true;
-//   //     // gripper_client_.call(gripper_service_);
-//   //     // if (gripper_service_.response.success) {
-//   //     //   ROS_INFO_STREAM("Gripper activated!");
-//   //     // } else {
-//   //     //   ROS_WARN_STREAM("Gripper activation failed!");
-//   //     // }
+  //     // std::string product_frame = "logical_camera_2_" + image_msg->models[0].type + "_0_frame";
 
-//   //     // std::string product_frame = "logical_camera_2_" + image_msg->models[0].type + "_0_frame";
-
-//   //     // geometry_msgs::TransformStamped tfGeom;
-//   //     // try {
-//   //     //     tfGeom = buffer.lookupTransform("world", "logical_camera_2_assembly_pump_blue_0_frame", ros::Time(0));
-//   //     // } catch (tf2::TransformException &e) {
-//   //     //     printf("ERROR\n");
-//   //     // }
+  //     // geometry_msgs::TransformStamped tfGeom;
+  //     // try {
+  //     //     tfGeom = buffer.lookupTransform("world", "logical_camera_2_assembly_pump_blue_0_frame", ros::Time(0));
+  //     // } catch (tf2::TransformException &e) {
+  //     //     printf("ERROR\n");
+  //     // }
       
-//   //     // ROS_INFO_STREAM("pose out: " << tfGeom);
+  //     // ROS_INFO_STREAM("pose out: " << tfGeom);
 
-//   //     // target_pose1.position.x = tfGeom.transform.translation.x;
-//   //     // target_pose1.position.y = tfGeom.transform.translation.y - 0.52;
-//   //     // target_pose1.position.z = tfGeom.transform.translation.z + 0.1;
-//   //     // target_pose1.orientation.x = -0.0110788;
-//   //     // target_pose1.orientation.y = 0.711468;
-//   //     // target_pose1.orientation.z = 0.011894;
-//   //     // target_pose1.orientation.w = 0.702532;
-//   //     // move_group.setPoseTarget(target_pose1);
-//   //     // moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-//   //     // bool success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-//   //     // move_group.move();
-//   //     // printf("move 1 done...\n");
+  //     // target_pose1.position.x = tfGeom.transform.translation.x;
+  //     // target_pose1.position.y = tfGeom.transform.translation.y - 0.52;
+  //     // target_pose1.position.z = tfGeom.transform.translation.z + 0.1;
+  //     // target_pose1.orientation.x = -0.0110788;
+  //     // target_pose1.orientation.y = 0.711468;
+  //     // target_pose1.orientation.z = 0.011894;
+  //     // target_pose1.orientation.w = 0.702532;
+  //     // move_group.setPoseTarget(target_pose1);
+  //     // moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+  //     // bool success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+  //     // move_group.move();
+  //     // printf("move 1 done...\n");
 
-//   //     // std::vector<geometry_msgs::Pose> waypoints;
-//   //     // waypoints.push_back(target_pose1);
+  //     // std::vector<geometry_msgs::Pose> waypoints;
+  //     // waypoints.push_back(target_pose1);
 
-//   //     // geometry_msgs::Pose target_pose3 = target_pose1;
+  //     // geometry_msgs::Pose target_pose3 = target_pose1;
 
-//   //     // target_pose3.position.z -= 0.026;
-//   //     // target_pose3.position.y -= 0.5;
-//   //     // waypoints.push_back(target_pose3);  // down
+  //     // target_pose3.position.z -= 0.026;
+  //     // target_pose3.position.y -= 0.5;
+  //     // waypoints.push_back(target_pose3);  // down
 
-//   //     // geometry_msgs::Pose target_pose4 = target_pose3;
+  //     // geometry_msgs::Pose target_pose4 = target_pose3;
 
-//   //     // target_pose4.position.z += 0.35;
-//   //     // target_pose4.position.y -= 0.25;
-//   //     // waypoints.push_back(target_pose4);  // up
+  //     // target_pose4.position.z += 0.35;
+  //     // target_pose4.position.y -= 0.25;
+  //     // waypoints.push_back(target_pose4);  // up
 
-//   //     // // move_group.setMaxVelocityScalingFactor(0.001);
-//   //     // moveit_msgs::RobotTrajectory trajectory;
-//   //     // const double jump_threshold = 0.0;
-//   //     // const double eef_step = 0.01;
-//   //     // double fraction = move_group.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
-//   //     // my_plan.trajectory_ = trajectory;
-//   //     // move_group.execute(my_plan);
-//   //     // printf("done picking up part\n");
+  //     // // move_group.setMaxVelocityScalingFactor(0.001);
+  //     // moveit_msgs::RobotTrajectory trajectory;
+  //     // const double jump_threshold = 0.0;
+  //     // const double eef_step = 0.01;
+  //     // double fraction = move_group.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
+  //     // my_plan.trajectory_ = trajectory;
+  //     // move_group.execute(my_plan);
+  //     // printf("done picking up part\n");
 
-//   //     // geometry_msgs::Pose target_pose5 = target_pose4;
-//   //     // target_pose5.position.y = 4.67;  // Move down y to AGV
-//   //     // move_group.setPoseTarget(target_pose5);
-//   //     // success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-//   //     // move_group.move();
-//   //     // printf("move to agv done...\n");
+  //     // geometry_msgs::Pose target_pose5 = target_pose4;
+  //     // target_pose5.position.y = 4.67;  // Move down y to AGV
+  //     // move_group.setPoseTarget(target_pose5);
+  //     // success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+  //     // move_group.move();
+  //     // printf("move to agv done...\n");
 
-//   //     // geometry_msgs::Pose target_pose6 = target_pose5;
-//   //     // target_pose6.position.x = -2.26;  // Swing around to AGV
-//   //     // move_group.setPoseTarget(target_pose6);
-//   //     // success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-//   //     // move_group.move();
-//   //     // printf("swing to agv done...\n");
+  //     // geometry_msgs::Pose target_pose6 = target_pose5;
+  //     // target_pose6.position.x = -2.26;  // Swing around to AGV
+  //     // move_group.setPoseTarget(target_pose6);
+  //     // success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+  //     // move_group.move();
+  //     // printf("swing to agv done...\n");
 
-//   //     // geometry_msgs::Pose target_pose7 = target_pose6;
-//   //     // target_pose7.position.z = 0.91;  // Lower to drop position
-//   //     // move_group.setPoseTarget(target_pose7);
-//   //     // success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-//   //     // move_group.move();
-//   //     // printf("lower part done...\n");
+  //     // geometry_msgs::Pose target_pose7 = target_pose6;
+  //     // target_pose7.position.z = 0.91;  // Lower to drop position
+  //     // move_group.setPoseTarget(target_pose7);
+  //     // success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+  //     // move_group.move();
+  //     // printf("lower part done...\n");
 
-//   //     // gripper_service_.request.enable = false;
-//   //     // gripper_client_.call(gripper_service_);
-//   //     // if (gripper_service_.response.success) {
-//   //     //   ROS_INFO_STREAM("Gripper deactivated!");
-//   //     // } else {
-//   //     //   ROS_WARN_STREAM("Gripper deactivation failed!");
-//   //     // }
+  //     // gripper_service_.request.enable = false;
+  //     // gripper_client_.call(gripper_service_);
+  //     // if (gripper_service_.response.success) {
+  //     //   ROS_INFO_STREAM("Gripper deactivated!");
+  //     // } else {
+  //     //   ROS_WARN_STREAM("Gripper deactivation failed!");
+  //     // }
 
-//   //     // geometry_msgs::Pose target_pose8 = target_pose7;
-//   //     // target_pose8.position.z = 1.25;  // Raise arm
-//   //     // target_pose8.position.x += 0.25;  // Move arm closer to body
-//   //     // move_group.setPoseTarget(target_pose8);
-//   //     // success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-//   //     // move_group.move();
-//   //     // printf("part left on AGV...\n");
-//   //     ////////////////////////////////////////////////////////////////////////////////////
+  //     // geometry_msgs::Pose target_pose8 = target_pose7;
+  //     // target_pose8.position.z = 1.25;  // Raise arm
+  //     // target_pose8.position.x += 0.25;  // Move arm closer to body
+  //     // move_group.setPoseTarget(target_pose8);
+  //     // success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+  //     // move_group.move();
+  //     // printf("part left on AGV...\n");
+  //     ////////////////////////////////////////////////////////////////////////////////////
 
 
 
-//   //     // Below code was used to use path planner for moving arm...except it kept failing to find a path in the 5 seconds allotted...
-//   //     // So not using the cartesian paths below instead...
-//   //     ////////////////////////////////////////////////////////////////////////////////////
-//   //     // geometry_msgs::Pose target_pose9 = target_pose8;
-//   //     // target_pose9.position.y = tfGeom2.transform.translation.y;  // Just move left
-//   //     // move_group.setPoseTarget(target_pose9);
-//   //     // success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-//   //     // move_group.move();
-//   //     // printf("move near part bin\n");
+  //     // Below code was used to use path planner for moving arm...except it kept failing to find a path in the 5 seconds allotted...
+  //     // So not using the cartesian paths below instead...
+  //     ////////////////////////////////////////////////////////////////////////////////////
+  //     // geometry_msgs::Pose target_pose9 = target_pose8;
+  //     // target_pose9.position.y = tfGeom2.transform.translation.y;  // Just move left
+  //     // move_group.setPoseTarget(target_pose9);
+  //     // success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+  //     // move_group.move();
+  //     // printf("move near part bin\n");
 
-//   //     // geometry_msgs::Pose target_pose10 = target_pose9;
-//   //     // target_pose10.position.x = tfGeom2.transform.translation.x;
-//   //     // target_pose10.position.z = tfGeom2.transform.translation.z+.9;  // Move over part
-//   //     // move_group.setPoseTarget(target_pose10);
-//   //     // success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-//   //     // move_group.move();
-//   //     // printf("move over part\n");
-//   //     ////////////////////////////////////////////////////////////////////////////////////
+  //     // geometry_msgs::Pose target_pose10 = target_pose9;
+  //     // target_pose10.position.x = tfGeom2.transform.translation.x;
+  //     // target_pose10.position.z = tfGeom2.transform.translation.z+.9;  // Move over part
+  //     // move_group.setPoseTarget(target_pose10);
+  //     // success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+  //     // move_group.move();
+  //     // printf("move over part\n");
+  //     ////////////////////////////////////////////////////////////////////////////////////
 
-//   //   }
-//   //   sleep(1);
-//   //   // printf("bb count: %d\n", comp_class.breakbeam_triggered);
-//   // }
-//   ////////////////////////////////////////////////////////////////////////////////////
-//   sleep(1);
+  //   }
+  //   sleep(1);
+  //   // printf("bb count: %d\n", comp_class.breakbeam_triggered);
+  // }
+  ////////////////////////////////////////////////////////////////////////////////////
+  sleep(1);
 
   OrderPart order_part;
   order_part = orders.getNextPart(order_kit_order);
   geometry_msgs::TransformStamped tfGeom2;
   geometry_msgs::TransformStamped worldPose;
 
-  printf("test msg 8a, order_part.part_count: %d\n", order_part.part_count);
-
   if (order_part.part_count > 0) {
-  	std::cout << "test msg 8b, in order if: " << order_part.order_number << "\n";
     std::cout << "data returned: " << order_part.order_number << ", " << order_part.part_type << ", " << order_part.agv << ", " << order_part.station << ", " << order_part.current_pose << "\n";
-    ros::Duration(1.0).sleep();
     try {
         tfGeom2 = buffer.lookupTransform("world", order_part.current_pose, ros::Time(0));
     } catch (tf2::TransformException &e) {
@@ -593,10 +584,9 @@ int main(int argc, char ** argv) {
   }
 
   std::vector<geometry_msgs::Pose> waypoints;
-  printf("Test msg 9, waypoint vector created...\n");
 
-//   // ROS_INFO("End effector pose->position (x,y,z): (%f,%f,%f)", p.pose.position.x, p.pose.position.y, p.pose.position.z);
-//   // ROS_INFO("End effector pose->orientation (x,y,z,w): (%f,%f,%f,%f)", p.pose.orientation.x, p.pose.orientation.y, p.pose.orientation.z, p.pose.orientation.w);
+  // ROS_INFO("End effector pose->position (x,y,z): (%f,%f,%f)", p.pose.position.x, p.pose.position.y, p.pose.position.z);
+  // ROS_INFO("End effector pose->orientation (x,y,z,w): (%f,%f,%f,%f)", p.pose.orientation.x, p.pose.orientation.y, p.pose.orientation.z, p.pose.orientation.w);
 
   // First, swing around to the agv side
   geometry_msgs::Pose target_pose;
@@ -612,10 +602,6 @@ int main(int argc, char ** argv) {
   bool success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
   move_group.move();
 
-  printf("Test msg 10, 1 move done?...\n");
-
-  ros::Duration(1.0).sleep();
-
   geometry_msgs::Pose target_pose5 = target_pose;
   target_pose5.position.x = -1.3;  // Swing around to AGV side
   target_pose5.position.y = 0.9;  // Swing around to AGV side
@@ -624,16 +610,12 @@ int main(int argc, char ** argv) {
   move_group.move();
   printf("move 2 done...\n");
 
-  ros::Duration(1.0).sleep();
-
   geometry_msgs::Pose target_pose6 = target_pose5;
   target_pose6.position.x = -2.26;  // Swing around to AGV side
   move_group.setPoseTarget(target_pose6);
   success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
   move_group.move();
   printf("swing to agv done...\n");
-
-  ros::Duration(1.0).sleep();
 
   waypoints.push_back(target_pose6);
 
@@ -658,10 +640,9 @@ int main(int argc, char ** argv) {
   } else {
     ROS_WARN_STREAM("Gripper activation failed!");
   }
-  printf("gripper activated, trying to go get teh part now...\n");
 
   waypoints.clear();
-  target_pose10.position.z = 0.785;  // Move over part
+  target_pose10.position.z = 0.805;  // Move over part
   waypoints.push_back(target_pose10);
   fraction = move_group.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
   my_plan.trajectory_ = trajectory;
@@ -670,15 +651,17 @@ int main(int argc, char ** argv) {
 
   std::vector<geometry_msgs::Pose> waypoints3, waypoints4;
   geometry_msgs::Pose target_pose11 = target_pose10;
-  while (!comp_class.gripper_attached) {
+  int move_counter =  0;
+  while (!comp_class.gripper_attached && move_counter < 5) {
     ros::Duration(0.5).sleep();
-    target_pose11.position.z -= 0.01;  // Move closer over part
+    target_pose11.position.z -= 0.005;  // Move closer over part
     waypoints3.clear();
     waypoints3.push_back(target_pose11);
     fraction = move_group.computeCartesianPath(waypoints3, eef_step, jump_threshold, trajectory);
     my_plan.trajectory_ = trajectory;
     move_group.execute(my_plan);
     printf("done moving nearer part...\n");
+    move_counter++;
   }
 
   geometry_msgs::Pose target_pose12 = target_pose11;
@@ -745,6 +728,16 @@ int main(int argc, char ** argv) {
   move_group.execute(my_plan);
   printf("hopefully moved away from part...\n");
 
+  // read qc sensor:
+  int qc_count = CheckPart(order_part.agv);
+  printf("QC check, count: %d\n", qc_count);
+  if (qc_count == 0) {
+    // Remove part from list of parts in bins
+    bp.PartUsed(order_part.part_type);
+    // And update the order...somehow...
+    orders.UpdateOrder(order_part);
+  }
+
   ros::ServiceClient submit_client = node.serviceClient<nist_gear::AGVToAssemblyStation>("/ariac/"+order_part.agv+"/submit_shipment");
   if (!submit_client.exists()) {
     ROS_INFO("Waiting for the client to be ready...");
@@ -760,11 +753,13 @@ int main(int argc, char ** argv) {
 
   if (!srv.response.success) {
       ROS_ERROR_STREAM("Service failed!");
-      printf("in submit shipment error");
+      printf("in submit shipment error\n");
   } else {
-  	  printf("in submit shipment success");
+  	  printf("in submit shipment success\n");
       ROS_INFO("Service succeeded.");
   }
+
+  
 
   return 0;
 }

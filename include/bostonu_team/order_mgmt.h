@@ -21,12 +21,13 @@ class OrderPart
     }
     std::string order_number;
     std::string order_shipment_number;
-    int part_count;
+    int part_count;  // If a part in an order is available for picking, this value is 1, else it's 0 
     std::string part_type;
     std::string current_pose;
     geometry_msgs::TransformStamped destination_pose;
     std::string agv;
     std::string station;
+    int idx;  // Index of the part in the part_type_pose_vect of the ordershipment
 };
 
 class OrderShipment                       
@@ -65,7 +66,8 @@ class Orders
     std::string findHighestPriorityOrder();
     int OrderNumberCheck(const std::string &);
     void allocateOrderPart(const std::string &);  // Takes in a part_type, checks if there are any available in the bin-based parts list and decrements if there are parts, else increments needed-part list
-    OrderPart getNextPart(int);  //Assume it will return something by having the front end check size of order_list first
+    OrderPart getNextPart(int);  // Assume it will return something by having the front end check size of order_list first
+    int UpdateOrder(OrderPart);  // Takes in an OrderPart, removes the part from the order_shipment and returns # of parts still in order
     // Needs order_list=(order_number, <OrderShipment>), max_priority, open_shipments
 
 

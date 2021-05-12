@@ -5,6 +5,14 @@
 
 void test();
 
+int CheckPart(const std::string &);  //returns how many bad parts are detected on the agv name input
+
+class Bad_Part
+{
+  public:
+    
+};
+
 class Bin_Parts                       
 {
   public:
@@ -34,3 +42,4 @@ class Parts_List
   // private:
     std::map<std::string, std::map<std::string, int>> list_part_count;  // part list type (bin vs needed), <part_type, count>
 };
+

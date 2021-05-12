@@ -139,7 +139,7 @@ std::string Orders::findHighestPriorityOrder() {
 OrderPart Orders::getNextPart(int shipment_type) {
     std::string highestPriorityOrder = findHighestPriorityOrder();
     std::cout << "In getNextPart, highestPriorityOrder: " << highestPriorityOrder << ", but using order_0 anyway...\n";
-    // highestPriorityOrder = "order_0";  // MB: Remove for production
+    highestPriorityOrder = "order_0";  // MB: Remove for production
     OrderPart op_;
     for (auto ordershipment : this->order_list[highestPriorityOrder]) {
         std::cout << "In getNextPart, in first for loop\n"; 
@@ -149,12 +149,6 @@ OrderPart Orders::getNextPart(int shipment_type) {
             for (int i = 0; i < partTypeCount; i++) {
                 std::pair<std::string, geometry_msgs::Pose> ptp_pair = ordershipment.part_type_pose_vect[i];
                 std::string part_type = ptp_pair.first;
-                // std::cout << "In getNextPart, part_type: " << part_type << " and count? " << pl_->list_part_count["bin"].find(part_type)->second << "\n";
-                // for(std::map<std::string,int>::iterator it = pl_->list_part_count["bin"].begin(); it != pl_->list_part_count["bin"].end(); ++it) {
-                //   std::cout << "In getNextPart, all parts in list_part_count[bin]: \n";
-                //   std::cout << "Key: " << it->first << "\n";
-                //   std::cout << "Value: " << it->second << "\n";
-                // }
                 if (bp_->PartCount(part_type) > 0) {
                     std::cout << "Somehow we're in the depth of getNextPart: " << part_type << "\n";
                     // Set values to return
@@ -164,6 +158,7 @@ OrderPart Orders::getNextPart(int shipment_type) {
                     op_.part_type = ordershipment.part_type_pose_vect[i].first;
                     op_.agv = ordershipment.order_shipment_agv;
                     op_.station = ordershipment.order_shipment_station;
+                    op_.idx = i;
                     // Get tf frame name of part's current position
                     op_.current_pose = bp_->GetFrame(op_.part_type);
                     // Build TransformStamped message of part's local pose on the agv (used to get world pose on agv later)
@@ -172,6 +167,7 @@ OrderPart Orders::getNextPart(int shipment_type) {
                     geometry_msgs::Pose dest_pose = ordershipment.part_type_pose_vect[i].second;
                     geometry_msgs::TransformStamped localPose;
                     localPose.header.frame_id = "kit_tray_" + std::to_string(agv_id);
+                    std::cout << "Getting OrderPart, original pose in vect: " << dest_pose.position.x << "\n";
                     localPose.transform.translation.x = dest_pose.position.x;
                     localPose.transform.translation.y = dest_pose.position.y;
                     localPose.transform.translation.z = dest_pose.position.z;
@@ -187,4 +183,24 @@ OrderPart Orders::getNextPart(int shipment_type) {
         }
     }
     return op_;  
+}
+
+int Orders::UpdateOrder(OrderPart op_) {
+    std::vector<OrderShipment>& osv_ = this->order_list[op_.order_number];  // Get '&' reference to original order in order_list, rather than making a copy of it
+    int osv_size = osv_.size();
+    for (int i=0; i < osv_size; i++) {
+        if (osv_[i].order_shipment_number == op_.order_shipment_number) {
+            std::cout << "In updateorder, order_shipment_number: " << osv_[i].order_shipment_number << "\n";
+            std::cout << "In updateorder, order_shipment part_type_pose_vect size: " << osv_[i].part_type_pose_vect.size() << "\n";
+            std::vector<std::pair<std::string, geometry_msgs::Pose>>::iterator it;
+            it = osv_[i].part_type_pose_vect.begin() + op_.idx;
+            std::cout << "In updateorder, original pose in vect: " << it->second.position.x << "\n";
+            osv_[i].part_type_pose_vect.erase(it);
+            std::cout << "In updateorder, this->order_shipment part_type_pose_vect size after delete: " << this->order_list[op_.order_number][i].part_type_pose_vect.size() << "\n";
+
+            i = osv_size;
+        }
+    }
+
+    // 
 }

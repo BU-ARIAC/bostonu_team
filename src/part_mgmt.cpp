@@ -3,6 +3,7 @@
 #include <ros/ros.h>
 #include <nist_gear/LogicalCameraImage.h>
 #include "part_mgmt.h"
+#include "order_mgmt.h"
 
 std::string bin_camera_0 = "logical_camera_0";
 std::string bin_camera_1 = "logical_camera_1";
@@ -70,12 +71,7 @@ int Bin_Parts::PartUsed(const std::string &part_type) {
 int Parts_List::PopulateBinList(Bin_Parts &bp) {
   std::vector<std::string> keys = bp.GetPartTypes();
   for (std::string key : keys){
-    std::cout << "IN POPULATEBINLIST, part: " << key << " " << bp.PartCount(key) << "\n";
-    std::pair<std::string, int> pair1;
-    pair1.first = key;
-    pair1.second = bp.PartCount(key);
-    this->list_part_count["bin"].insert(pair1);
-    std::cout << "IN POPULATEBINLIST 2, part: " << key << ", lookup after insert: " << this->list_part_count["bin"].find(key)->second << "\n";
+    this->list_part_count["bin"].insert( std::pair<std::string, int>(key, bp.PartCount(key)) );
   }
   return 1;
 }
@@ -119,4 +115,12 @@ int Parts_List::DecrementNeededPart(const std::string &part_type) {
     return -1;
   }
   return this->list_part_count["needed"][part_type];
+}
+
+int CheckPart(const std::string &agv) {
+  int agv_id = agv_numbers.find(agv)->second;
+  std::string qc_name = "quality_control_sensor_"+std::to_string(agv_id);
+  const nist_gear::LogicalCameraImage::ConstPtr & image_msg = ros::topic::waitForMessage<nist_gear::LogicalCameraImage>("/ariac/" + qc_name);
+  int ret = image_msg->models.size();  // Should report 0 if no bads parts, else the count of bad parts
+  return ret;
 }
