@@ -570,10 +570,10 @@ int main(int argc, char ** argv) {
   if (order_part.part_count > 0) {
     std::cout << "data returned: " << order_part.order_number << ", " << order_part.part_type << ", " << order_part.agv << ", " << order_part.station << ", " << order_part.current_pose << "\n";
     try {
-        tfGeom2 = buffer.lookupTransform("world", order_part.current_pose, ros::Time(0));
+      tfGeom2 = buffer.lookupTransform("world", order_part.current_pose, ros::Time::now(), ros::Duration(5.0));
     } catch (tf2::TransformException &e) {
-        printf("ERROR\n");
-        printf("%s\n",e.what());
+      printf("ERROR\n");
+      printf("%s\n",e.what());
     }
     std::cout << "current: " << tfGeom2.transform.translation.x << ", " << tfGeom2.transform.translation.y << ", " << tfGeom2.transform.translation.z << "\n";
     // get the pose of the object in the tray from the order
