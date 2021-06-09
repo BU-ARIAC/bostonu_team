@@ -5,6 +5,7 @@
 #include <ros/ros.h>
 #include <nist_gear/LogicalCameraImage.h>
 #include <nist_gear/AGVToAssemblyStation.h>
+#include <nist_gear/AssemblyStationSubmitShipment.h>
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_listener.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
@@ -187,6 +188,56 @@ OrderPart Orders::getNextPart(int shipment_type) {
     return op_;  
 }
 
+OrderPart Orders::getNextAssemblyPart() {
+    std::string highestPriorityOrder = findHighestPriorityOrder();
+    std::cout << "In getNextPart, highestPriorityOrder: " << highestPriorityOrder << ", but using order_0 anyway...\n";
+    // highestPriorityOrder = "order_0";  // MB: Remove for production
+    OrderPart op_;
+    for (auto ordershipment : this->order_list[highestPriorityOrder]) {
+        // std::cout << "In getNextPart, in first for loop\n"; 
+        if (ordershipment.order_shipment_type == order_asm_order) {
+            int partTypeCount = ordershipment.part_type_pose_vect.size();
+            std::cout << "In getNextPart, partTypeCount: " << partTypeCount << "\n";
+            for (int i = 0; i < partTypeCount; i++) {
+                std::pair<std::string, geometry_msgs::Pose> ptp_pair = ordershipment.part_type_pose_vect[i];
+                std::string part_type = ptp_pair.first;
+                // std::cout << "In getNextPart, in second for loop, part type: " << part_type << ", and count: " << bp_->PartCount(part_type) << "\n";
+                // if (bp_->PartCount(part_type) > 0) {
+                    // std::cout << "Somehow we're in the depth of getNextPart: " << part_type << "\n";
+                    // Set values to return
+                    op_.order_number = highestPriorityOrder;
+                    op_.order_shipment_number = ordershipment.order_shipment_number;
+                    op_.part_count = 1;
+                    op_.part_type = ordershipment.part_type_pose_vect[i].first;
+                    op_.agv = ordershipment.order_shipment_agv;
+                    op_.station = ordershipment.order_shipment_station;
+                    op_.idx = i;
+                    // Get tf frame name of part's current position
+                    op_.current_pose = "";
+                    // Build TransformStamped message of part's local pose on the agv (used to get world pose on agv later)
+                    std::string station = ordershipment.order_shipment_station;
+                    int station_id = station_numbers.find(station)->second;
+                    geometry_msgs::Pose dest_pose = ordershipment.part_type_pose_vect[i].second;
+                    geometry_msgs::TransformStamped localPose;
+                    localPose.header.frame_id = "briefcase_" + std::to_string(station_id);
+                    std::cout << "Getting OrderPart, original pose in vect: " << dest_pose.position.x << "\n";
+                    localPose.transform.translation.x = dest_pose.position.x;
+                    localPose.transform.translation.y = dest_pose.position.y;
+                    localPose.transform.translation.z = dest_pose.position.z;
+                    localPose.transform.rotation.x = dest_pose.orientation.x;
+                    localPose.transform.rotation.y = dest_pose.orientation.y;
+                    localPose.transform.rotation.z = dest_pose.orientation.z;
+                    localPose.transform.rotation.w = dest_pose.orientation.w;
+                    op_.destination_pose = localPose;
+                    i = partTypeCount; // end loop
+                    return op_;  // Return and stop the for loop processing...
+                // }  
+            }
+        }
+    }
+    return op_;  
+}
+
 OrderPart Orders::getOrderPart(const std::string & part_type_input) {
     std::string highestPriorityOrder = findHighestPriorityOrder();
     // std::cout << "In getNextPart, highestPriorityOrder: " << highestPriorityOrder << ", but using order_0 anyway...\n";
@@ -237,6 +288,18 @@ OrderPart Orders::getOrderPart(const std::string & part_type_input) {
     return op_;  
 }
 
+void Orders::update_parts_remain() {
+    this->parts_remain_kit = 0;
+    this->parts_remain_asm = 0;
+    for (auto order : this->order_list) {
+        for (auto os : order.second) {
+            std::cout << " in update parts: " << os.order_shipment_type << ", " << os.part_type_pose_vect.size() << "\n";
+            if (os.order_shipment_type == order_kit_order) this->parts_remain_kit += os.part_type_pose_vect.size();
+            else this->parts_remain_asm += os.part_type_pose_vect.size();
+        } 
+    }
+}
+
 int Orders::UpdateOrder(OrderPart op_) {
     std::vector<OrderShipment>& osv_ = this->order_list[op_.order_number];  // Get '&' reference to original order in order_list, rather than making a copy of it
     int osv_size = osv_.size();
@@ -258,27 +321,49 @@ int Orders::UpdateOrder(OrderPart op_) {
 }
 
 int Orders::SubmitOrderShipment(OrderPart op_) {
-    int ret = 0;  // Returns 0 on failure, so hopefully this never happens...
-    submit_client = order_node.serviceClient<nist_gear::AGVToAssemblyStation>("/ariac/"+op_.agv+"/submit_shipment");
-    if (!submit_client.exists()) {
-        ROS_INFO("Waiting for the client to be ready...");
-        submit_client.waitForExistence();
-        ROS_INFO("Service started.");
+    int ret = 0;  // Returns 0 on failure, so hopefully this never happens...  /ariac/as{N}/submit_shipment 
+    bool success = true;
+    if (op_.order_shipment_number.find("kitting") != std::string::npos) {
+        submit_client = order_node.serviceClient<nist_gear::AGVToAssemblyStation>("/ariac/"+op_.agv+"/submit_shipment");
+        nist_gear::AGVToAssemblyStation srv;
+        srv.request.shipment_type = op_.order_number;
+        srv.request.assembly_station_name = op_.station;
+        submit_client.call(srv);
+        if (!srv.response.success) success = false;
+    } else {
+        submit_client = order_node.serviceClient<nist_gear::AssemblyStationSubmitShipment>("/ariac/"+op_.station+"/submit_shipment");
+        nist_gear::AssemblyStationSubmitShipment srv;
+        srv.request.shipment_type = op_.order_number;
+        submit_client.call(srv);
+        if (!srv.response.success) success = false;
     }
+    
+    // if (!submit_client.exists()) {
+    //     ROS_INFO("Waiting for the client to be ready...");
+    //     submit_client.waitForExistence();
+    //     ROS_INFO("Service started.");
+    // }
 
-    nist_gear::AGVToAssemblyStation srv;
-    srv.request.shipment_type = op_.order_number;
-    srv.request.assembly_station_name = op_.station;
+    // nist_gear::AGVToAssemblyStation srv;
+    // srv.request.shipment_type = op_.order_number;
+    // srv.request.assembly_station_name = op_.station;
 
-    submit_client.call(srv);
+    // submit_client.call(srv);
 
-    if (!srv.response.success) {
+    if (!success) {
         ROS_ERROR_STREAM("Service failed!");
         printf("in submit shipment error\n");
     } else {
         ret = 1;
         printf("in submit shipment success\n");
         ROS_INFO("Service succeeded.");
+        std::vector<OrderShipment>& osv_ = this->order_list[op_.order_number];
+        int osv_size = osv_.size();
+        for (int i=0; i < osv_size; i++) {
+            if (osv_[i].order_shipment_number == op_.order_shipment_number) {
+                osv_.erase(osv_.begin()+i);
+            }
+        }
     }
     return ret;
 }

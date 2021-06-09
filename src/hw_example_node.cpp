@@ -41,8 +41,6 @@
 #include <nist_gear/AGVControl.h>
 #include <nist_gear/AGVToAssemblyStation.h>
 
-#include <nist_gear/ConveyorBeltControl.h>  // used for testing; not available in production
-
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_listener.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
@@ -428,11 +426,10 @@ public:
     assembly_arm_joint_trajectory_publisher_ = node.advertise<trajectory_msgs::JointTrajectory>(
       "/ariac/gantry/gantry_arm_controller/command", 10);
 
-    // depth_as1_pcl2_pub_ = node.advertise<sensor_msgs::PointCloud2>("/ariac/depth_camera_as1/p2", 10);
-    // depth_as2_pcl2_pub_ = node.advertise<sensor_msgs::PointCloud2>("/ariac/depth_camera_as2/p2", 10);
-    depth_as3_pcl2_pub_ = node.advertise<sensor_msgs::PointCloud2>("/ariac/depth_camera_as3/p2", 10);
+    depth_as1_pcl2_pub_ = node.advertise<sensor_msgs::PointCloud2>("/ariac/depth_camera_as1/p2", 10);
+    depth_as2_pcl2_pub_ = node.advertise<sensor_msgs::PointCloud2>("/ariac/depth_camera_as2/p2", 10);
     depth_as3b_pcl2_pub_ = node.advertise<sensor_msgs::PointCloud2>("/ariac/depth_camera_as3b/p2", 10);
-    // depth_as4_pcl2_pub_ = node.advertise<sensor_msgs::PointCloud2>("/ariac/depth_camera_as4/p2", 10);
+    depth_as4_pcl2_pub_ = node.advertise<sensor_msgs::PointCloud2>("/ariac/depth_camera_as4/p2", 10);
     // %EndTag(ADV_CMD)%
   }
 
@@ -494,15 +491,6 @@ public:
     // std::cout << "AS2 depth points: " << point_msg->points.size() << "\n";
     static bool test = sensor_msgs::convertPointCloudToPointCloud2(*point_msg,	depth_as2_current_pcl2_); 	
     depth_as2_pcl2_pub_.publish(depth_as2_current_pcl2_);
-  }
-
-  void depth_camera_as3_callback(
-    const sensor_msgs::PointCloud::ConstPtr & point_msg)
-  {
-    ROS_INFO_STREAM_THROTTLE(10, "Depth camera as3 published data...");
-    // std::cout << "AS3 depth points: " << point_msg->points.size() << "\n";
-    static bool test = sensor_msgs::convertPointCloudToPointCloud2(*point_msg,	depth_as3_current_pcl2_); 	
-    depth_as3_pcl2_pub_.publish(depth_as3_current_pcl2_);
   }
 
   void depth_camera_as3b_callback(
@@ -616,12 +604,10 @@ private:
   ros::Publisher assembly_arm_joint_trajectory_publisher_;
   ros::Publisher depth_as1_pcl2_pub_;
   ros::Publisher depth_as2_pcl2_pub_;
-  ros::Publisher depth_as3_pcl2_pub_;
   ros::Publisher depth_as3b_pcl2_pub_;
   ros::Publisher depth_as4_pcl2_pub_;
   sensor_msgs::PointCloud2 depth_as1_current_pcl2_;
   sensor_msgs::PointCloud2 depth_as2_current_pcl2_;
-  sensor_msgs::PointCloud2 depth_as3_current_pcl2_;
   sensor_msgs::PointCloud2 depth_as3b_current_pcl2_;
   sensor_msgs::PointCloud2 depth_as4_current_pcl2_;
   sensor_msgs::JointState kitting_current_joint_states_;
@@ -632,7 +618,7 @@ private:
 
 // %Tag(MAIN)%
 int main(int argc, char ** argv) {
-    
+
   ROS_INFO("HERE HERE HERE");
   
   // Last argument is the default name of the node.
@@ -689,14 +675,9 @@ int main(int argc, char ** argv) {
     "/ariac/depth_camera_as2", 2,
     &MyCompetitionClass::depth_camera_as2_callback, &comp_class);
 
-  ros::Subscriber depth_camera_as3_subscriber = node.subscribe(
-    "/ariac/depth_camera_as3", 2,
-    &MyCompetitionClass::depth_camera_as3_callback, &comp_class);
-
   ros::Subscriber depth_camera_as3b_subscriber = node.subscribe(
     "/ariac/depth_camera_as3b", 2,
     &MyCompetitionClass::depth_camera_as3b_callback, &comp_class);
-  
 
   ros::Subscriber depth_camera_as4_subscriber = node.subscribe(
     "/ariac/depth_camera_as4", 1,
@@ -734,126 +715,215 @@ int main(int argc, char ** argv) {
   
   OrderPart order_part;
   // order_part = orders.getNextPart(order_kit_order);
-  geometry_msgs::TransformStamped part_worldPose_curr, part_worldPose_dest;
+  geometry_msgs::TransformStamped localPose, part_worldPose_curr, part_worldPose_dest;
   geometry_msgs::Pose target_pose;
-  int remaining_part_count = 1; // order_part.part_count;
+  // int remaining_part_count = orders.order_list.size(); 
   bool part_picked = false;
+  orders.update_parts_remain();
   // ros::Duration(7).sleep();
 
-  while (remaining_part_count > 0) {
-    if (comp_class.breakbeam_triggered > 0 && pl.list_part_count["needed"].size() > 0) {
-      for (auto part : pl.list_part_count["needed"]) {
-        int try_the_conveyor = pick_part(part.first, robot_kit);
-        std::cout << "\n\nIN THE IF STATEMENT, FOR LOOP, return value: " << try_the_conveyor << "\n\n";
-        if (try_the_conveyor > 0) {
-          order_part = orders.getOrderPart(part.first);
-          part_picked = true;
-        } else {
-          order_part = orders.getNextPart(order_kit_order);
-          part_worldPose_curr = part_mgmt.GetPartPose(order_part.current_pose);
-          std::cout << "current: " << part_worldPose_curr.transform.translation.x << ", " << part_worldPose_curr.transform.translation.y << ", " << part_worldPose_curr.transform.translation.z << "\n";
-          part_picked = false;
+  while (orders.parts_remain_kit > 0 || orders.parts_remain_asm > 0) {
+    if (orders.parts_remain_kit > 0) {
+      if (comp_class.breakbeam_triggered > 0 && pl.list_part_count["needed"].size() > 0) {
+        for (auto part : pl.list_part_count["needed"]) {
+          int try_the_conveyor = pick_part(part.first, robot_kit);
+          std::cout << "\n\nIN THE IF STATEMENT, FOR LOOP, return value: " << try_the_conveyor << "\n\n";
+          if (try_the_conveyor > 0) {
+            order_part = orders.getOrderPart(part.first);
+            part_picked = true;
+          } else {
+            order_part = orders.getNextPart(order_kit_order);
+            part_worldPose_curr = part_mgmt.GetPartPose(order_part.current_pose);
+            std::cout << "current: " << part_worldPose_curr.transform.translation.x << ", " << part_worldPose_curr.transform.translation.y << ", " << part_worldPose_curr.transform.translation.z << "\n";
+            part_picked = false;
+          }
         }
+      } else {
+        // If parts remain on order, get the next part
+        order_part = orders.getNextPart(order_kit_order);
+        part_worldPose_curr = part_mgmt.GetPartPose(order_part.current_pose);
+        std::cout << "current: " << part_worldPose_curr.transform.translation.x << ", " << part_worldPose_curr.transform.translation.y << ", " << part_worldPose_curr.transform.translation.z << "\n";
+        part_picked = false;
       }
-    } else {
-      // If parts remain on order, get the next part
-      order_part = orders.getNextPart(order_kit_order);
-      part_worldPose_curr = part_mgmt.GetPartPose(order_part.current_pose);
-      std::cout << "current: " << part_worldPose_curr.transform.translation.x << ", " << part_worldPose_curr.transform.translation.y << ", " << part_worldPose_curr.transform.translation.z << "\n";
-      part_picked = false;
-    }
-    std::cout << "data returned: " << order_part.order_number << ", " << order_part.part_type << ", " << order_part.agv << ", " << order_part.station << ", " << order_part.current_pose << "\n";
-    
-    // get the pose of the object in the tray from the order
-    part_worldPose_dest = part_mgmt.GetPartPose(order_part.destination_pose);
-    std::cout << "Transform.translation in " << order_part.agv << ": " << part_worldPose_dest.transform.translation.x << ", " << part_worldPose_dest.transform.translation.y << ", " << part_worldPose_dest.transform.translation.z << "\n";
-    std::cout << "Transform.orientation in " << order_part.agv << ": " << part_worldPose_dest.transform.rotation.x << ", " << part_worldPose_dest.transform.rotation.y << ", " << part_worldPose_dest.transform.rotation.z << ", " << part_worldPose_dest.transform.rotation.w << "\n";
+      std::cout << "data returned: " << order_part.order_number << ", " << order_part.part_type << ", " << order_part.agv << ", " << order_part.station << ", " << order_part.current_pose << "\n";
+      
+      // get the pose of the object in the tray from the order
+      part_worldPose_dest = part_mgmt.GetPartPose(order_part.destination_pose);
+      std::cout << "Transform.translation in " << order_part.agv << ": " << part_worldPose_dest.transform.translation.x << ", " << part_worldPose_dest.transform.translation.y << ", " << part_worldPose_dest.transform.translation.z << "\n";
+      std::cout << "Transform.orientation in " << order_part.agv << ": " << part_worldPose_dest.transform.rotation.x << ", " << part_worldPose_dest.transform.rotation.y << ", " << part_worldPose_dest.transform.rotation.z << ", " << part_worldPose_dest.transform.rotation.w << "\n";
 
-    if (part_picked) {
-      // Move to the destination agv
-      test = robot_kit.move_near(part_worldPose_dest);
-
-      // Drop the part at the destination
-      test = robot_kit.drop_part(part_worldPose_dest);
-
-      // Remove the needed part from teh list
-      test = pl.DecrementNeededPart(order_part.part_type);
-    } else {
-      if (part_worldPose_curr.transform.translation.x > -2.60) {
-        // Use the kitting robot
-        test = robot_kit.move_bin_side();
-
-        // Move to the part in the bin
-        test = robot_kit.move_near(part_worldPose_curr);
-
-        // Pickup the part
-        test = robot_kit.pickup_part(part_worldPose_curr);
-
-        // Need to check if part needs to be flipped...and then add some way to flip a part...
-
+      if (part_picked) {
         // Move to the destination agv
         test = robot_kit.move_near(part_worldPose_dest);
 
         // Drop the part at the destination
         test = robot_kit.drop_part(part_worldPose_dest);
+
+        // Remove the needed part from teh list
+        test = pl.DecrementNeededPart(order_part.part_type);
       } else {
-        // Use the gantry robot
-        test = robot_g_arm.ZeroArm();
-        
-        // Logic to move to correct bin
-        std::vector<double> joint_group_positions;
-        double xaxis = part_worldPose_curr.transform.translation.x;
-        double yaxis = part_worldPose_curr.transform.translation.y;
-        if (xaxis > -2.2) {  
-            // The bins closer to the conveyor
-            if (yaxis > 3.08) joint_group_positions = jgp_gt_kit_bin1;
-            else if (yaxis > 2.26) joint_group_positions = jgp_gt_kit_bin2;
-            else if (yaxis > -2.86) joint_group_positions = jgp_gt_kit_bin6;
-            else joint_group_positions = jgp_gt_kit_bin5;
+        if (part_worldPose_curr.transform.translation.x > -2.60) {
+          // Use the kitting robot
+          test = robot_kit.move_bin_side();
+
+          // Move to the part in the bin
+          test = robot_kit.move_near(part_worldPose_curr);
+
+          // Pickup the part
+          test = robot_kit.pickup_part(part_worldPose_curr);
+
+          // Need to check if part needs to be flipped...and then add some way to flip a part...
+
+          // Move to the destination agv
+          test = robot_kit.move_near(part_worldPose_dest);
+
+          // Drop the part at the destination
+          test = robot_kit.drop_part(part_worldPose_dest);
         } else {
-            // The bins further from the conveyor
-            if (yaxis > 3.08) joint_group_positions = jgp_gt_kit_bin4;
-            else if (yaxis > 2.26) joint_group_positions = jgp_gt_kit_bin3;
-            else if (yaxis > -2.86) joint_group_positions = jgp_gt_kit_bin7;
-            else joint_group_positions = jgp_gt_kit_bin8;
+          // Use the gantry robot
+          test = robot_g_arm.ZeroArm();
+          
+          // Logic to move to correct bin
+          std::vector<double> joint_group_positions;
+          double xaxis = part_worldPose_curr.transform.translation.x;
+          double yaxis = part_worldPose_curr.transform.translation.y;
+          if (xaxis > -2.2) {  
+              // The bins closer to the conveyor
+              if (yaxis > 3.08) joint_group_positions = jgp_gt_kit_bin1;
+              else if (yaxis > 2.26) joint_group_positions = jgp_gt_kit_bin2;
+              else if (yaxis > -2.86) joint_group_positions = jgp_gt_kit_bin6;
+              else joint_group_positions = jgp_gt_kit_bin5;
+          } else {
+              // The bins further from the conveyor
+              if (yaxis > 3.08) joint_group_positions = jgp_gt_kit_bin4;
+              else if (yaxis > 2.26) joint_group_positions = jgp_gt_kit_bin3;
+              else if (yaxis > -2.86) joint_group_positions = jgp_gt_kit_bin7;
+              else joint_group_positions = jgp_gt_kit_bin8;
+          }
+          test = robot_g_torso.move_to(joint_group_positions);
+
+          // The pose on the bin is to the bottom of the part, so need to add its height to it
+          double part_height;
+          if(order_part.part_type[9] == 'p') part_height = PUMP_HEIGHT;
+          else if(order_part.part_type[9] == 's') part_height = SENSOR_HEIGHT; 
+          else if(order_part.part_type[9] == 'b') part_height = BATTERY_HEIGHT;
+          else part_height = REGULATOR_HEIGHT;
+          part_worldPose_curr.transform.translation.z += part_height;
+          test = robot_g_arm.pickup_part_bins(part_worldPose_curr);
+
+          // NEED AGV LOGIC HERE
+          if(order_part.agv[3] == '1') test = robot_g_torso.move_to(jgp_gt_kit_agv1);
+          else if(order_part.agv[3] == '2') test = robot_g_torso.move_to(jgp_gt_kit_agv2);
+          else if(order_part.agv[3] == '3') test = robot_g_torso.move_to(jgp_gt_kit_agv3);
+          else test = robot_g_torso.move_to(jgp_gt_kit_agv4);
+
+          // Again, the pose on the agv is to the bottom of the part, so need to add its height to it 
+          part_worldPose_dest.transform.translation.z += part_height;
+          test = robot_g_arm.drop_part_agv(part_worldPose_dest);
+
+          // Move to an out of the way pose
+          test = robot_g_torso.move_to(jgp_gt_prehandoff);
+
         }
-        test = robot_g_torso.move_to(joint_group_positions);
-
-        // The pose on the bin is to the bottom of the part, so need to add its height to it
-        double part_height;
-        if(order_part.part_type[9] == 'p') part_height = PUMP_HEIGHT;
-        else if(order_part.part_type[9] == 's') part_height = SENSOR_HEIGHT; 
-        else if(order_part.part_type[9] == 'b') part_height = BATTERY_HEIGHT;
-        else part_height = REGULATOR_HEIGHT;
-        part_worldPose_curr.transform.translation.z += part_height;
-        test = robot_g_arm.pickup_part_bins(part_worldPose_curr);
-
-        // NEED AGV LOGIC HERE
-        if(order_part.agv[3] == '1') test = robot_g_torso.move_to(jgp_gt_kit_agv1);
-        else if(order_part.agv[3] == '2') test = robot_g_torso.move_to(jgp_gt_kit_agv2);
-        else if(order_part.agv[3] == '3') test = robot_g_torso.move_to(jgp_gt_kit_agv3);
-        else test = robot_g_torso.move_to(jgp_gt_kit_agv4);
-
-        // Again, the pose on the agv is to the bottom of the part, so need to add its height to it 
-        part_worldPose_dest.transform.translation.z += part_height;
-        test = robot_g_arm.drop_part_agv(part_worldPose_dest);
-
-        // Move to an out of the way pose
-        test = robot_g_torso.move_to(jgp_gt_prehandoff);
-
+        // Remove part from list of parts in bins
+        bp.PartUsed(order_part.part_type);
       }
-      // Remove part from list of parts in bins
-      bp.PartUsed(order_part.part_type);
+    } else {
+      order_part = orders.getNextAssemblyPart();
+
+      int station_id = station_numbers.find(order_part.station)->second;
+      int agv_id = 0;
+
+      geometry_msgs::TransformStamped localPose;
+      for (int c=0; c < 2; c++) {
+        std::string cam = station_cameras.find(order_part.station)->second[c];
+        const nist_gear::LogicalCameraImage::ConstPtr & image_msg = ros::topic::waitForMessage<nist_gear::LogicalCameraImage>(cam);
+        for(int i = 0; i < image_msg->models.size(); i++){
+          if(image_msg->models[i].type == order_part.part_type){
+            agv_id = (2*((station_id-1)/2))+c+1;
+            localPose.header.frame_id = cam.substr(7,cam.size()-7)+"_frame";
+            localPose.transform.translation.x = image_msg->models[i].pose.position.x;
+            localPose.transform.translation.y = image_msg->models[i].pose.position.y;
+            localPose.transform.translation.z = image_msg->models[i].pose.position.z;
+            localPose.transform.rotation.x = image_msg->models[i].pose.orientation.x;
+            localPose.transform.rotation.y = image_msg->models[i].pose.orientation.y;
+            localPose.transform.rotation.z = image_msg->models[i].pose.orientation.z;
+            localPose.transform.rotation.w = image_msg->models[i].pose.orientation.w;
+            i = image_msg->models.size();
+            c = 2;
+          }
+        }
+      }
+
+      test = robot_g_arm.ZeroArm();
+
+      int asagv, aspcase, ascase;
+      if (station_id == 1) {
+        aspcase = LOC_AS1_PCASE;
+        ascase = LOC_AS1_CASE;
+        if (agv_id == 1) asagv = LOC_AS1_AGV1;
+        else asagv = LOC_AS1_AGV2;
+      } else if (station_id == 2) {
+        aspcase = LOC_AS2_PCASE;
+        ascase = LOC_AS2_CASE;
+        if (agv_id == 1) asagv = LOC_AS2_AGV1;
+        else asagv = LOC_AS2_AGV2;
+      } else if (station_id == 3) {
+        aspcase = LOC_AS3_PCASE;
+        ascase = LOC_AS3_CASE;
+        if (agv_id == 3) asagv = LOC_AS3_AGV3;
+        else asagv = LOC_AS3_AGV4;
+      } else if (station_id == 4) {
+        aspcase = LOC_AS4_PCASE;
+        ascase = LOC_AS4_CASE;
+        if (agv_id == 3) asagv = LOC_AS4_AGV3;
+        else asagv = LOC_AS4_AGV4;
+      }
+
+      test = robot_g_torso.move_torso(asagv);
+      
+      part_worldPose_curr = part_mgmt.GetPartPose(localPose);  // Pose on agv tray; z-value = BOTTOM of part on tray (hence need to add part height)
+      // The pose on the bin is to the bottom of the part, so need to add its height to it
+      double part_height;
+      if(order_part.part_type[9] == 'p') part_height = PUMP_HEIGHT;
+      else if(order_part.part_type[9] == 's') part_height = SENSOR_HEIGHT; 
+      else if(order_part.part_type[9] == 'b') part_height = BATTERY_HEIGHT;
+      else part_height = REGULATOR_HEIGHT; 
+      part_worldPose_curr.transform.translation.z += part_height;
+      std::cout << "current: " << part_worldPose_curr.transform.translation.x << ", " << part_worldPose_curr.transform.translation.y << ", " << part_worldPose_curr.transform.translation.z << "\n";
+
+      test = robot_g_arm.pickup_part(part_worldPose_curr);
+
+      // Assuming pickup successful, attach the part to the end effector for planning
+
+      // Maybe add joint constraint to keep the ee facing downward for the placing operations?
+
+      test = robot_g_torso.move_torso(aspcase);
+
+      test = robot_g_arm.CaseArm();
+
+      test = robot_g_torso.move_torso(ascase);
+
+      part_worldPose_dest = part_mgmt.GetPartPose(order_part.destination_pose);
+
+      test = robot_g_arm.drop_part(part_worldPose_dest);
+
+      test = robot_g_torso.move_torso(asagv);
+
+      test = robot_g_arm.ZeroArm();
+
     }
 
     // Remove the part from the order and get back the count of parts remianing on the order
-    remaining_part_count = orders.UpdateOrder(order_part);
+    test = orders.UpdateOrder(order_part);
 
-    if (remaining_part_count == 0) {
+    if (test == 0) {
       // Order complete; submit it
       int order_submitted = orders.SubmitOrderShipment(order_part);
       printf("Order submitted, should return 1 (meaning success): %d\n", order_submitted);
     }
+
+    orders.update_parts_remain();
 
   }
 
