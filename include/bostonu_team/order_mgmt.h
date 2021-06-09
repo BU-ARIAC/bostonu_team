@@ -67,7 +67,9 @@ class Orders
     int OrderNumberCheck(const std::string &);
     void allocateOrderPart(const std::string &);  // Takes in a part_type, checks if there are any available in the bin-based parts list and decrements if there are parts, else increments needed-part list
     OrderPart getNextPart(int);  // Assume it will return something by having the front end check size of order_list first
+    OrderPart getOrderPart(const std::string &);  // Assumes a kitting order type
     int UpdateOrder(OrderPart);  // Takes in an OrderPart, removes the part from the order_shipment and returns # of parts still in order
+    int SubmitOrderShipment(OrderPart);  // Takes in an OrderPart and submits it if it was previously determined to be complete; returns 1 on success, 0 on error
     // Needs order_list=(order_number, <OrderShipment>), max_priority, open_shipments
 
 
@@ -80,6 +82,7 @@ class Orders
   private:
     ros::NodeHandle order_node;
     ros::Subscriber orders_subscriber;
+    ros::ServiceClient submit_client;
     std::vector<nist_gear::Order> received_orders_;
     Parts_List *pl_;
     Bin_Parts *bp_;
