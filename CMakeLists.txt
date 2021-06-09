@@ -33,7 +33,7 @@ catkin_package()
 ## Build ##
 ###########
 # /usr/include/pcl-1.8/pcl/point_cloud.h
-include_directories(include ${catkin_INCLUDE_DIRS})
+include_directories(include/bostonu_team ${catkin_INCLUDE_DIRS})
 
 ## Declare a C++ executable
 add_executable(hw_example_node src/hw_example_node.cpp src/part_mgmt.cpp src/order_mgmt.cpp src/robot_mgmt.cpp src/robot_kitting.cpp src/robot_gantry.cpp)
@@ -48,11 +48,11 @@ target_link_libraries(hw_example_node ${catkin_LIBRARIES})
 # See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
 
 ## Mark executable scripts (Python etc.) for installation
-install(PROGRAMS
-  script/hw_example_node.py
-  script/tf2_example.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+#install(PROGRAMS
+#  script/hw_example_node.py
+#  script/tf2_example.py
+#  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+#)
 
 ## Mark executables and/or libraries for installation
 install(TARGETS hw_example_node
@@ -62,11 +62,11 @@ install(TARGETS hw_example_node
 )
 
 ## Mark cpp header files for installation
-# install(DIRECTORY include/bostonu_team/
-#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-#   FILES_MATCHING PATTERN "*.h"
-#   PATTERN ".svn" EXCLUDE
-# )
+install(DIRECTORY include/bostonu_team/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 install(FILES
