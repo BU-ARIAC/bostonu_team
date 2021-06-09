@@ -632,6 +632,8 @@ private:
 
 // %Tag(MAIN)%
 int main(int argc, char ** argv) {
+    
+  ROS_INFO("HERE HERE HERE");
   
   // Last argument is the default name of the node.
   ros::init(argc, argv, "hw_example_node");
