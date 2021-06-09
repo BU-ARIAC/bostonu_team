@@ -4,6 +4,7 @@
 #include <nist_gear/Order.h>
 #include <ros/ros.h>
 #include <nist_gear/LogicalCameraImage.h>
+#include <nist_gear/AGVToAssemblyStation.h>
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_listener.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
@@ -139,18 +140,19 @@ std::string Orders::findHighestPriorityOrder() {
 OrderPart Orders::getNextPart(int shipment_type) {
     std::string highestPriorityOrder = findHighestPriorityOrder();
     std::cout << "In getNextPart, highestPriorityOrder: " << highestPriorityOrder << ", but using order_0 anyway...\n";
-    highestPriorityOrder = "order_0";  // MB: Remove for production
+    // highestPriorityOrder = "order_0";  // MB: Remove for production
     OrderPart op_;
     for (auto ordershipment : this->order_list[highestPriorityOrder]) {
-        std::cout << "In getNextPart, in first for loop\n"; 
+        // std::cout << "In getNextPart, in first for loop\n"; 
         if (ordershipment.order_shipment_type == shipment_type) {
             int partTypeCount = ordershipment.part_type_pose_vect.size();
             std::cout << "In getNextPart, partTypeCount: " << partTypeCount << "\n";
             for (int i = 0; i < partTypeCount; i++) {
                 std::pair<std::string, geometry_msgs::Pose> ptp_pair = ordershipment.part_type_pose_vect[i];
                 std::string part_type = ptp_pair.first;
+                // std::cout << "In getNextPart, in second for loop, part type: " << part_type << ", and count: " << bp_->PartCount(part_type) << "\n";
                 if (bp_->PartCount(part_type) > 0) {
-                    std::cout << "Somehow we're in the depth of getNextPart: " << part_type << "\n";
+                    // std::cout << "Somehow we're in the depth of getNextPart: " << part_type << "\n";
                     // Set values to return
                     op_.order_number = highestPriorityOrder;
                     op_.order_shipment_number = ordershipment.order_shipment_number;
@@ -185,9 +187,60 @@ OrderPart Orders::getNextPart(int shipment_type) {
     return op_;  
 }
 
+OrderPart Orders::getOrderPart(const std::string & part_type_input) {
+    std::string highestPriorityOrder = findHighestPriorityOrder();
+    // std::cout << "In getNextPart, highestPriorityOrder: " << highestPriorityOrder << ", but using order_0 anyway...\n";
+    // highestPriorityOrder = "order_0";  // MB: Remove for production
+    OrderPart op_;
+    for (auto ordershipment : this->order_list[highestPriorityOrder]) {
+        // std::cout << "In getNextPart, in first for loop\n"; 
+        if (ordershipment.order_shipment_type == order_kit_order) {
+            int partTypeCount = ordershipment.part_type_pose_vect.size();
+            std::cout << "In getNextPart, partTypeCount: " << partTypeCount << "\n";
+            for (int i = 0; i < partTypeCount; i++) {
+                std::pair<std::string, geometry_msgs::Pose> ptp_pair = ordershipment.part_type_pose_vect[i];
+                std::string part_type = ptp_pair.first;
+                // std::cout << "In getNextPart, in second for loop, part type: " << part_type << ", and count: " << bp_->PartCount(part_type) << "\n";
+                if (part_type == part_type_input) {
+                    // std::cout << "Somehow we're in the depth of getNextPart: " << part_type << "\n";
+                    // Set values to return
+                    op_.order_number = highestPriorityOrder;
+                    op_.order_shipment_number = ordershipment.order_shipment_number;
+                    op_.part_count = 1;
+                    op_.part_type = ordershipment.part_type_pose_vect[i].first;
+                    op_.agv = ordershipment.order_shipment_agv;
+                    op_.station = ordershipment.order_shipment_station;
+                    op_.idx = i;
+                    // Get tf frame name of part's current position
+                    // op_.current_pose = bp_->GetFrame(op_.part_type);
+                    // Build TransformStamped message of part's local pose on the agv (used to get world pose on agv later)
+                    std::string agv = ordershipment.order_shipment_agv;
+                    int agv_id = agv_numbers.find(agv)->second;
+                    geometry_msgs::Pose dest_pose = ordershipment.part_type_pose_vect[i].second;
+                    geometry_msgs::TransformStamped localPose;
+                    localPose.header.frame_id = "kit_tray_" + std::to_string(agv_id);
+                    std::cout << "Getting OrderPart, original pose in vect: " << dest_pose.position.x << "\n";
+                    localPose.transform.translation.x = dest_pose.position.x;
+                    localPose.transform.translation.y = dest_pose.position.y;
+                    localPose.transform.translation.z = dest_pose.position.z;
+                    localPose.transform.rotation.x = dest_pose.orientation.x;
+                    localPose.transform.rotation.y = dest_pose.orientation.y;
+                    localPose.transform.rotation.z = dest_pose.orientation.z;
+                    localPose.transform.rotation.w = dest_pose.orientation.w;
+                    op_.destination_pose = localPose;
+                    i = partTypeCount; // end loop
+                    return op_;  // Return and stop the for loop processing...
+                }  
+            }
+        }
+    }
+    return op_;  
+}
+
 int Orders::UpdateOrder(OrderPart op_) {
     std::vector<OrderShipment>& osv_ = this->order_list[op_.order_number];  // Get '&' reference to original order in order_list, rather than making a copy of it
     int osv_size = osv_.size();
+    int ret = -1;  // Basically this should never get returned...probably need error handling to deal with the case if it does, though
     for (int i=0; i < osv_size; i++) {
         if (osv_[i].order_shipment_number == op_.order_shipment_number) {
             std::cout << "In updateorder, order_shipment_number: " << osv_[i].order_shipment_number << "\n";
@@ -197,10 +250,35 @@ int Orders::UpdateOrder(OrderPart op_) {
             std::cout << "In updateorder, original pose in vect: " << it->second.position.x << "\n";
             osv_[i].part_type_pose_vect.erase(it);
             std::cout << "In updateorder, this->order_shipment part_type_pose_vect size after delete: " << this->order_list[op_.order_number][i].part_type_pose_vect.size() << "\n";
-
+            ret = osv_[i].part_type_pose_vect.size();
             i = osv_size;
         }
     }
+    return ret; 
+}
 
-    // 
+int Orders::SubmitOrderShipment(OrderPart op_) {
+    int ret = 0;  // Returns 0 on failure, so hopefully this never happens...
+    submit_client = order_node.serviceClient<nist_gear::AGVToAssemblyStation>("/ariac/"+op_.agv+"/submit_shipment");
+    if (!submit_client.exists()) {
+        ROS_INFO("Waiting for the client to be ready...");
+        submit_client.waitForExistence();
+        ROS_INFO("Service started.");
+    }
+
+    nist_gear::AGVToAssemblyStation srv;
+    srv.request.shipment_type = op_.order_number;
+    srv.request.assembly_station_name = op_.station;
+
+    submit_client.call(srv);
+
+    if (!srv.response.success) {
+        ROS_ERROR_STREAM("Service failed!");
+        printf("in submit shipment error\n");
+    } else {
+        ret = 1;
+        printf("in submit shipment success\n");
+        ROS_INFO("Service succeeded.");
+    }
+    return ret;
 }
