@@ -12,6 +12,11 @@ void test_om();
 const int order_kit_order = 1;
 const int order_asm_order = 2;
 const std::map<std::string, int> agv_numbers = {{"agv1", 1}, {"agv2", 2}, {"agv3", 3}, {"agv4", 4}};
+const std::map<std::string, int> station_numbers = {{"as1", 1}, {"as2", 2}, {"as3", 3}, {"as4", 4}};
+const std::map<std::string, std::vector<std::string>> station_cameras = {{"as1", {"/ariac/logical_camera_agv1_as1", "/ariac/logical_camera_agv2_as1"}}, 
+      {"as2", {"/ariac/logical_camera_agv1_as2", "/ariac/logical_camera_agv2_as2"}},
+      {"as3", {"/ariac/logical_camera_agv3_as3", "/ariac/logical_camera_agv4_as3"}},
+      {"as4", {"/ariac/logical_camera_agv3_as4", "/ariac/logical_camera_agv4_as4"}} };
 
 class OrderPart
 {
@@ -61,12 +66,16 @@ class Orders
     Orders(Parts_List &, Bin_Parts &);
     std::map<std::string, std::vector<OrderShipment>> order_list;
     int max_priority;
+    int parts_remain_kit;
+    int parts_remain_asm;
+    void update_parts_remain();
     void order_callback(const nist_gear::Order::ConstPtr &);
     void process_received_orders();
     std::string findHighestPriorityOrder();
     int OrderNumberCheck(const std::string &);
     void allocateOrderPart(const std::string &);  // Takes in a part_type, checks if there are any available in the bin-based parts list and decrements if there are parts, else increments needed-part list
     OrderPart getNextPart(int);  // Assume it will return something by having the front end check size of order_list first
+    OrderPart getNextAssemblyPart();  // Assume it will return something by having the front end check size of order_list first
     OrderPart getOrderPart(const std::string &);  // Assumes a kitting order type
     int UpdateOrder(OrderPart);  // Takes in an OrderPart, removes the part from the order_shipment and returns # of parts still in order
     int SubmitOrderShipment(OrderPart);  // Takes in an OrderPart and submits it if it was previously determined to be complete; returns 1 on success, 0 on error
