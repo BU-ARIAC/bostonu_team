@@ -26,63 +26,81 @@ sensors:
       xyz: [-0.500000, 3.000000, 2.000000]
       rpy: [3.141593, 1.570792, 0.000000]
   
-  # depth_camera_as1:
-  #   type: depth_camera
-  #   pose:
-  #     xyz: [-7.300000, 3.000000, 2.500000]  # all were 2.7 in z; changed 5/23
-  #     rpy: [0, 'pi/2', 0]
+  # Assembly stations
+  depth_camera_as1:
+    type: depth_camera
+    pose:
+      xyz: [-7.300000, 3.000000, 2.500000]  # all were 2.7 in z; changed 5/23
+      rpy: ['pi/2', 'pi/2', 0]
+  
+  depth_camera_as2:
+    type: depth_camera
+    pose:
+      xyz: [-12.300000, 3.000000, 2.500000]
+      rpy: ['pi/2', 'pi/2', 0]
+  
+  depth_camera_as3b:
+    type: depth_camera
+    pose:
+      xyz: [-7.300000, -3.000000, 2.500000]
+      # xyz: [-7.600000, -2.700000, 2.600000]
+      rpy: ['pi/2', 'pi/2', 0]
+  
+  depth_camera_as4:
+    type: depth_camera
+    pose:
+      xyz: [-12.300000, -3.000000, 2.500000]
+      rpy: ['pi/2', 'pi/2', 0]
 
-  
-  # depth_camera_as2:
-  #   type: depth_camera
-  #   pose:
-  #     xyz: [-12.300000, 3.000000, 2.500000]
-  #     rpy: [0, 'pi/2', 0]
+  # AGVs at assembly stations
+  logical_camera_agv1_as1:
+    type: logical_camera
+    pose:
+      xyz: [-5.6, 4.675400, 1.801095]
+      rpy: [3.141593, 1.570792, 0.000000]
 
-  
-  # depth_camera_as2:
-  #   type: depth_camera
-  #   pose:
-  #     xyz: [-12.300000, 3.000000, 2.500000]
-  #     rpy: [0, 'pi/2', 0]
-  
-  # depth_camera_as3b:
-  #   type: depth_camera
-  #   pose:
-  #     xyz: [-7.300000, -3.000000, 2.500000]
-  #     # xyz: [-7.600000, -2.700000, 2.600000]
-  #     rpy: ['pi/2', 'pi/2', 0]
-  
-  # # Pointed at case from left (still misses parts of lid)
-  # # depth_camera_as3b:
-  # #   type: depth_camera
-  # #   pose:
-  # #     xyz: [-7.300000, -3.200000, 2.700000]
-  # #     # xyz: [-7.600000, -2.700000, 2.600000]
-  # #     rpy: [0, 2.070796, -1.500000]
+  logical_camera_agv1_as2:
+    type: logical_camera
+    pose:
+      xyz: [-10.6, 4.675400, 1.801095]
+      rpy: [3.141593, 1.570792, 0.000000]
 
-  # # Pointed at case from right - still missies front of case - move forward more!
-  # # depth_camera_as3:
-  # #   type: depth_camera
-  # #   pose:
-  # #     xyz: [-7.300000, -2.100000, 2.500000]
-  # #     # xyz: [-7.600000, -2.700000, 2.600000]
-  # #     rpy: [0, 0.920796, -1.500000]
-  
-  # # Pointed at case from right front
-  # depth_camera_as3:
-  #   type: depth_camera
-  #   pose:
-  #     xyz: [-7.000000, -2.100000, 2.500000]
-  #     # xyz: [-7.600000, -2.700000, 2.600000]
-  #     rpy: [0, 0.870796, -2.000000]
-  
-  # depth_camera_as4:
-  #   type: depth_camera
-  #   pose:
-  #     xyz: [-12.300000, -3.000000, 2.500000]
-  #     rpy: [0, 'pi/2', 0]
+  logical_camera_agv2_as1:
+    type: logical_camera
+    pose:
+      xyz: [-5.6, 1.367643, 1.801095]
+      rpy: [3.141593, 1.570792, 0.000000]
 
-# CHange below to true to enable the gantry camera...not sure how useful it is, though...  
+  logical_camera_agv2_as2:
+    type: logical_camera
+    pose:
+      xyz: [-10.6, 1.367643, 1.801095]
+      rpy: [3.141593, 1.570792, 0.000000]
+  
+  logical_camera_agv3_as3:
+    type: logical_camera
+    pose:
+      xyz: [-5.6, -1.333917, 1.801095]
+      rpy: [3.141593, 1.570792, 0.000000]
+
+  logical_camera_agv3_as4:
+    type: logical_camera
+    pose:
+      xyz: [-10.6, -1.333917, 1.801095]
+      rpy: [3.141593, 1.570792, 0.000000]
+
+  logical_camera_agv4_as3:
+    type: logical_camera
+    pose:
+      xyz: [-5.6, -4.696062, 1.801095]
+      rpy: [3.141593, 1.570792, 0.000000]
+
+  logical_camera_agv4_as4:
+    type: logical_camera
+    pose:
+      xyz: [-10.6, -4.696062, 1.801095]
+      rpy: [3.141593, 1.570792, 0.000000]
+
+# Change below to true to enable the gantry camera...not sure how useful it is, though...  
 robot_camera:
   enable: false
