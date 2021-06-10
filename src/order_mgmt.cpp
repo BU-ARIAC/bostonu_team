@@ -326,14 +326,14 @@ int Orders::SubmitOrderShipment(OrderPart op_) {
     if (op_.order_shipment_number.find("kitting") != std::string::npos) {
         submit_client = order_node.serviceClient<nist_gear::AGVToAssemblyStation>("/ariac/"+op_.agv+"/submit_shipment");
         nist_gear::AGVToAssemblyStation srv;
-        srv.request.shipment_type = op_.order_number;
+        srv.request.shipment_type = op_.order_shipment_number;
         srv.request.assembly_station_name = op_.station;
         submit_client.call(srv);
         if (!srv.response.success) success = false;
     } else {
         submit_client = order_node.serviceClient<nist_gear::AssemblyStationSubmitShipment>("/ariac/"+op_.station+"/submit_shipment");
         nist_gear::AssemblyStationSubmitShipment srv;
-        srv.request.shipment_type = op_.order_number;
+        srv.request.shipment_type = op_.order_shipment_number;
         submit_client.call(srv);
         if (!srv.response.success) success = false;
     }
