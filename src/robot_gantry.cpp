@@ -344,13 +344,13 @@ int Gantry_Arm::pickup_part_bins(const geometry_msgs::TransformStamped & dest_po
     target_pose0.position.x = dest_pose_.transform.translation.x;
     target_pose0.position.y = dest_pose_.transform.translation.y;
     target_pose0.position.z = dest_pose_.transform.translation.z + 0.1;  // Move over part; was static value "0.805" when picking a battery off a bin
-    target_pose.orientation.x = dest_pose_.transform.rotation.x;
-    target_pose.orientation.y = dest_pose_.transform.rotation.y;
-    target_pose.orientation.z = dest_pose_.transform.rotation.z;
-    target_pose.orientation.w = dest_pose_.transform.rotation.w;
+    // target_pose0.orientation.x = dest_pose_.transform.rotation.x;
+    // target_pose0.orientation.y = dest_pose_.transform.rotation.y;
+    // target_pose0.orientation.z = dest_pose_.transform.rotation.z;
+    // target_pose0.orientation.w = dest_pose_.transform.rotation.w;
     waypoints.push_back(target_pose0);
     geometry_msgs::Pose target_pose01 = target_pose0;
-    target_pose0.position.z = dest_pose_.transform.translation.z + 0.03;
+    target_pose01.position.z = dest_pose_.transform.translation.z + 0.03;
     waypoints.push_back(target_pose01);
     double fraction = this->move_group.computeCartesianPath(waypoints, this->eef_step, this->jump_threshold, this->trajectory, false);
     this->my_plan_.trajectory_ = this->trajectory;
@@ -363,7 +363,7 @@ int Gantry_Arm::pickup_part_bins(const geometry_msgs::TransformStamped & dest_po
     this->trajectory_success = 0;
     mg_counter = 0;
 
-    geometry_msgs::Pose target_pose1 = target_pose0;
+    geometry_msgs::Pose target_pose1 = target_pose01;
     int move_counter =  0;
     while (!this->gripper_attached && move_counter < 15) {
         target_pose1.position.z -= 0.005;  // Move closer over part
