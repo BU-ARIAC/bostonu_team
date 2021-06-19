@@ -16,6 +16,7 @@
 #include <moveit_msgs/ExecuteTrajectoryActionResult.h>
 #include <moveit_msgs/MoveGroupActionResult.h>
 #include <sensor_msgs/JointState.h>
+#include <moveit/robot_model_loader/robot_model_loader.h>
 
 #pragma once
 
@@ -123,6 +124,8 @@ static const std::vector<double> jgp_gt_kit_bin7 = { -0.70, 3.65, 0.0 };
 static const std::vector<double> jgp_gt_kit_bin8 = { -0.50, 2.70, 3.14 };  
 // ---------------------------------------------------------------------------
 
+void setAvgCartesianSpeed(moveit::planning_interface::MoveGroupInterface::Plan &, const std::string &, const double &, const std::string &);
+
 class Robot
 {
     public:
@@ -203,7 +206,14 @@ class Gantry_Arm : public Robot
 {
     public:
         Gantry_Arm(const std::string & robot_type="gantry", const bool & gantry_arm=true)
-            : Robot{ std::move(robot_type), std::move(gantry_arm) } {};
+            : Robot{ std::move(robot_type), std::move(gantry_arm) } {
+                gantry_arm_joint_trajectory_publisher_ = robot_node.advertise<trajectory_msgs::JointTrajectory>(
+                    "/ariac/gantry/gantry_arm_controller/command", 10);
+                gantry_arm_joint_state_subscriber = robot_node.subscribe("/ariac/gantry/joint_states", 10, &Gantry_Arm::gantry_arm_joint_state_callback, this);
+            };
+        bool check_joints = false;  // Used to determine when to process checks in joint_state_callback
+        ros::Publisher gantry_arm_joint_trajectory_publisher_;
+        ros::Subscriber gantry_arm_joint_state_subscriber;
         // stuff
         int move_near(const geometry_msgs::TransformStamped &);  // Move near a position defined by the msg
         int move_near(const geometry_msgs::Pose &);  // Move near a position defined by the msg
@@ -213,6 +223,8 @@ class Gantry_Arm : public Robot
         int drop_part_agv(const geometry_msgs::TransformStamped &);  // Drop the part at the location defined by the msg onto an agv
         int ZeroArm();  // Move the arm, by joint values, to a known good pose for picking parts
         int CaseArm();  // Move the arm, by joint values, to a known good pose over the case for assembly
+        void gantry_arm_joint_state_callback(const sensor_msgs::JointState::ConstPtr &);
+        void clear_arm_goal();
 };
 
 class Gantry_Torso : public Robot
