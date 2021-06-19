@@ -170,7 +170,8 @@ OrderPart Orders::getNextPart(int shipment_type) {
                     geometry_msgs::Pose dest_pose = ordershipment.part_type_pose_vect[i].second;
                     geometry_msgs::TransformStamped localPose;
                     localPose.header.frame_id = "kit_tray_" + std::to_string(agv_id);
-                    std::cout << "Getting OrderPart, original pose in vect: " << dest_pose.position.x << "\n";
+                    std::cout << "Getting OrderPart, original pose position in vect: " << dest_pose.position.x << ", " << dest_pose.position.y << ", " << dest_pose.position.z << "\n";
+                    std::cout << "Getting OrderPart, original pose orientatiuon in vect: " << dest_pose.orientation.x << ", " << dest_pose.orientation.y << ", " << dest_pose.orientation.z << ", " << dest_pose.orientation.w << "\n";
                     localPose.transform.translation.x = dest_pose.position.x;
                     localPose.transform.translation.y = dest_pose.position.y;
                     localPose.transform.translation.z = dest_pose.position.z;
@@ -220,7 +221,8 @@ OrderPart Orders::getNextAssemblyPart() {
                     geometry_msgs::Pose dest_pose = ordershipment.part_type_pose_vect[i].second;
                     geometry_msgs::TransformStamped localPose;
                     localPose.header.frame_id = "briefcase_" + std::to_string(station_id);
-                    std::cout << "Getting OrderPart, original pose in vect: " << dest_pose.position.x << "\n";
+                    std::cout << "Getting OrderPart, original pose position in vect: " << dest_pose.position.x << ", " << dest_pose.position.y << ", " << dest_pose.position.z << "\n";
+                    std::cout << "Getting OrderPart, original pose orientatiuon in vect: " << dest_pose.orientation.x << ", " << dest_pose.orientation.y << ", " << dest_pose.orientation.z << ", " << dest_pose.orientation.w << "\n";
                     localPose.transform.translation.x = dest_pose.position.x;
                     localPose.transform.translation.y = dest_pose.position.y;
                     localPose.transform.translation.z = dest_pose.position.z;
@@ -270,7 +272,8 @@ OrderPart Orders::getOrderPart(const std::string & part_type_input) {
                     geometry_msgs::Pose dest_pose = ordershipment.part_type_pose_vect[i].second;
                     geometry_msgs::TransformStamped localPose;
                     localPose.header.frame_id = "kit_tray_" + std::to_string(agv_id);
-                    std::cout << "Getting OrderPart, original pose in vect: " << dest_pose.position.x << "\n";
+                    std::cout << "Getting OrderPart, original pose position in vect: " << dest_pose.position.x << ", " << dest_pose.position.y << ", " << dest_pose.position.z << "\n";
+                    std::cout << "Getting OrderPart, original pose orientatiuon in vect: " << dest_pose.orientation.x << ", " << dest_pose.orientation.y << ", " << dest_pose.orientation.z << ", " << dest_pose.orientation.w << "\n";
                     localPose.transform.translation.x = dest_pose.position.x;
                     localPose.transform.translation.y = dest_pose.position.y;
                     localPose.transform.translation.z = dest_pose.position.z;

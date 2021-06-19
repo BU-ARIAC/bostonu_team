@@ -62,7 +62,6 @@
 #include "part_mgmt.h"
 #include "order_mgmt.h"
 #include "robot_mgmt.h"
-#include <moveit/robot_model_loader/robot_model_loader.h>
 
 struct conveyor_part{
     ros::Time time_acquired;
@@ -119,111 +118,6 @@ void end_competition(ros::NodeHandle & node) {
   } else {
     ROS_INFO("Competition ended");
   }
-}
-
-void setAvgCartesianSpeed(moveit::planning_interface::MoveGroupInterface::Plan &plan, const std::string end_effector, const double speed)
-{
-    robot_model_loader::RobotModelLoader robot_model_loader("/ariac/kitting/robot_description");
-    robot_model::RobotModelPtr kinematic_model = robot_model_loader.getModel();
-    robot_state::RobotStatePtr kinematic_state(new robot_state::RobotState(kinematic_model));
-    kinematic_state->setToDefaultValues();
- 
-    int num_waypoints = plan.trajectory_.joint_trajectory.points.size();                                //gets the number of waypoints in the trajectory
-    const std::vector<std::string> joint_names = plan.trajectory_.joint_trajectory.joint_names;    //gets the names of the joints being updated in the trajectory
- 
-    //set joint positions of zeroth waypoint
-    kinematic_state->setVariablePositions(joint_names, plan.trajectory_.joint_trajectory.points.at(0).positions);
- 
-    Eigen::Affine3d current_end_effector_state = kinematic_state->getGlobalLinkTransform(end_effector);
-    Eigen::Affine3d next_end_effector_state;
-    double euclidean_distance, new_timestamp, old_timestamp, q1, q2, q3, dt1, dt2, v1, v2, a;
-    trajectory_msgs::JointTrajectoryPoint *prev_waypoint, *curr_waypoint, *next_waypoint;
- 
-    for(int i = 0; i < num_waypoints - 1; i++)      //loop through all waypoints
-    {
-        curr_waypoint = &plan.trajectory_.joint_trajectory.points.at(i);
-        next_waypoint = &plan.trajectory_.joint_trajectory.points.at(i+1);
-         
-        //set joints for next waypoint
-        kinematic_state->setVariablePositions(joint_names, next_waypoint->positions);
- 
-        //do forward kinematics to get cartesian positions of end effector for next waypoint
-        next_end_effector_state = kinematic_state->getGlobalLinkTransform(end_effector);
- 
-        //get euclidean distance between the two waypoints
-        euclidean_distance = pow(pow(next_end_effector_state.translation()[0] - current_end_effector_state.translation()[0], 2) + 
-                            pow(next_end_effector_state.translation()[1] - current_end_effector_state.translation()[1], 2) + 
-                            pow(next_end_effector_state.translation()[2] - current_end_effector_state.translation()[2], 2), 0.5);
- 
-        new_timestamp = curr_waypoint->time_from_start.toSec() + (euclidean_distance / speed);      //start by printing out all 3 of these!
-        old_timestamp = next_waypoint->time_from_start.toSec();
- 
-        //update next waypoint timestamp & joint velocities/accelerations if joint velocity/acceleration constraints allow
-        if(new_timestamp > old_timestamp)
-            next_waypoint->time_from_start.fromSec(new_timestamp);
-        else
-        {
-            //ROS_WARN_NAMED("setAvgCartesianSpeed", "Average speed is too fast. Moving as fast as joint constraints allow.");
-        }
-         
-        //update current_end_effector_state for next iteration
-        current_end_effector_state = next_end_effector_state;
-    }
-     
-    //now that timestamps are updated, update joint velocities/accelerations (used updateTrajectory from iterative_time_parameterization as a reference)
-    for(int i = 0; i < num_waypoints; i++)
-    {
-        curr_waypoint = &plan.trajectory_.joint_trajectory.points.at(i);            //set current, previous & next waypoints
-        if(i > 0)
-            prev_waypoint = &plan.trajectory_.joint_trajectory.points.at(i-1);
-        if(i < num_waypoints-1)
-            next_waypoint = &plan.trajectory_.joint_trajectory.points.at(i+1);
- 
-        if(i == 0)          //update dt's based on waypoint (do this outside of loop to save time)
-            dt1 = dt2 = next_waypoint->time_from_start.toSec() - curr_waypoint->time_from_start.toSec();
-        else if(i < num_waypoints-1)
-        {
-            dt1 = curr_waypoint->time_from_start.toSec() - prev_waypoint->time_from_start.toSec();
-            dt2 = next_waypoint->time_from_start.toSec() - curr_waypoint->time_from_start.toSec();
-        }
-        else
-            dt1 = dt2 = curr_waypoint->time_from_start.toSec() - prev_waypoint->time_from_start.toSec();
- 
-        for(int j = 0; j < joint_names.size(); j++)     //loop through all joints in waypoint
-        {
-            if(i == 0)                      //first point
-            {
-                q1 = next_waypoint->positions.at(j);
-                q2 = curr_waypoint->positions.at(j);
-                q3 = q1;
-            }
-            else if(i < num_waypoints-1)    //middle points
-            {
-                q1 = prev_waypoint->positions.at(j);
-                q2 = curr_waypoint->positions.at(j);
-                q3 = next_waypoint->positions.at(j);
-            }
-            else                            //last point
-            {
-                q1 = prev_waypoint->positions.at(j);
-                q2 = curr_waypoint->positions.at(j);
-                q3 = q1;
-            }
- 
-            if(dt1 == 0.0 || dt2 == 0.0)
-                v1 = v2 = a = 0.0;
-            else
-            {
-                v1 = (q2 - q1)/dt1;
-                v2 = (q3 - q2)/dt2;
-                a = 2.0*(v2 - v1)/(dt1+dt2);
-            }
- 
-            //actually set the velocity and acceleration
-            curr_waypoint->velocities.at(j) = (v1+v2)/2;
-            curr_waypoint->accelerations.at(j) = a;
-        }
-    }
 }
 
 int pick_part(std::string part_type, Kitting &kitting){
@@ -392,7 +286,7 @@ int pick_part(std::string part_type, Kitting &kitting){
   fraction = kitting.move_group.computeCartesianPath(pickup_poses,eef_step_small, jump_threshold, trajectory, false);
   kitting.my_plan_.trajectory_ = trajectory;
   std::cout << ros::Time::now() << '\n';
-  setAvgCartesianSpeed(kitting.my_plan_, "ee_link", 0.23);
+  setAvgCartesianSpeed(kitting.my_plan_, "ee_link", 0.23, "/ariac/kitting/robot_description");
   // std::cout << "desired z value for picking: " << kitting_pose.position.z << "\n";
   kitting.check_joints = true;
   kitting.move_group.execute(kitting.my_plan_);
@@ -735,6 +629,7 @@ int main(int argc, char ** argv) {
             order_part = orders.getNextPart(order_kit_order);
             part_worldPose_curr = part_mgmt.GetPartPose(order_part.current_pose);
             std::cout << "current: " << part_worldPose_curr.transform.translation.x << ", " << part_worldPose_curr.transform.translation.y << ", " << part_worldPose_curr.transform.translation.z << "\n";
+            std::cout << "current orientation: " << part_worldPose_curr.transform.rotation.x << ", " << part_worldPose_curr.transform.rotation.y << ", " << part_worldPose_curr.transform.rotation.z << ", " << part_worldPose_curr.transform.rotation.w << "\n";
             part_picked = false;
           }
         }
@@ -743,9 +638,17 @@ int main(int argc, char ** argv) {
         order_part = orders.getNextPart(order_kit_order);
         part_worldPose_curr = part_mgmt.GetPartPose(order_part.current_pose);
         std::cout << "current: " << part_worldPose_curr.transform.translation.x << ", " << part_worldPose_curr.transform.translation.y << ", " << part_worldPose_curr.transform.translation.z << "\n";
+        std::cout << "current orientation: " << part_worldPose_curr.transform.rotation.x << ", " << part_worldPose_curr.transform.rotation.y << ", " << part_worldPose_curr.transform.rotation.z << ", " << part_worldPose_curr.transform.rotation.w << "\n";
         part_picked = false;
       }
       std::cout << "data returned: " << order_part.order_number << ", " << order_part.part_type << ", " << order_part.agv << ", " << order_part.station << ", " << order_part.current_pose << "\n";
+
+      // Get part height - used in picking and dropping
+      double part_height;
+      if(order_part.part_type[9] == 'p') part_height = PUMP_HEIGHT;
+      else if(order_part.part_type[9] == 's') part_height = SENSOR_HEIGHT; 
+      else if(order_part.part_type[9] == 'b') part_height = BATTERY_HEIGHT;
+      else part_height = REGULATOR_HEIGHT;
       
       // get the pose of the object in the tray from the order
       part_worldPose_dest = part_mgmt.GetPartPose(order_part.destination_pose);
@@ -755,6 +658,20 @@ int main(int argc, char ** argv) {
       if (part_picked) {
         // Move to the destination agv
         test = robot_kit.move_near(part_worldPose_dest);
+
+        // Attempt to roll the part orientation by 90 degrees to match the kitting arm's orientation
+        tf2::Quaternion q_orig, q_rot, q_new;
+        // Get the original orientation of 'part_worldPose_dest'
+        tf2::convert(part_worldPose_dest.transform.rotation , q_orig);
+        double r=M_PI_2, p=0, y=0;  // Rotate the previous pose by 90* about X
+        q_rot.setRPY(r, p, y);
+        q_new = q_rot*q_orig;  // Calculate the new orientation
+        q_new.normalize();
+        // Stuff the new rotation back into the pose. This requires conversion into a msg type
+        tf2::convert(q_new, part_worldPose_dest.transform.rotation);
+
+        // Again, the pose on the agv is to the bottom of the part, so need to add its height to it 
+        part_worldPose_dest.transform.translation.z += part_height;
 
         // Drop the part at the destination
         test = robot_kit.drop_part(part_worldPose_dest);
@@ -769,6 +686,9 @@ int main(int argc, char ** argv) {
           // Move to the part in the bin
           test = robot_kit.move_near(part_worldPose_curr);
 
+          // The pose on the bin is to the bottom of the part, so need to add its height to it
+          part_worldPose_curr.transform.translation.z += part_height;
+
           // Pickup the part
           test = robot_kit.pickup_part(part_worldPose_curr);
 
@@ -776,6 +696,20 @@ int main(int argc, char ** argv) {
 
           // Move to the destination agv
           test = robot_kit.move_near(part_worldPose_dest);
+
+          // Attempt to roll the part orientation by 90 degrees to match the kitting arm's orientation
+          tf2::Quaternion q_orig, q_rot, q_new;
+          // Get the original orientation of 'part_worldPose_dest'
+          tf2::convert(part_worldPose_dest.transform.rotation , q_orig);
+          double r=M_PI_2, p=0, y=0;  // Rotate the previous pose by 90* about X
+          q_rot.setRPY(r, p, y);
+          q_new = q_rot*q_orig;  // Calculate the new orientation
+          q_new.normalize();
+          // Stuff the new rotation back into the pose. This requires conversion into a msg type
+          tf2::convert(q_new, part_worldPose_dest.transform.rotation);
+
+          // Again, the pose on the agv is to the bottom of the part, so need to add its height to it 
+          part_worldPose_dest.transform.translation.z += part_height;
 
           // Drop the part at the destination
           test = robot_kit.drop_part(part_worldPose_dest);
@@ -802,16 +736,25 @@ int main(int argc, char ** argv) {
           }
           test = robot_g_torso.move_to(joint_group_positions);
 
+          // Attempt to roll the part orientation by 90 degrees to match the gantry arm's orientation
+          // tf2::Quaternion q_orig, q_rot, q_new;
+          // // Get the original orientation of 'part_worldPose_dest'
+          // tf2::convert(part_worldPose_curr.transform.rotation , q_orig);
+          // double r=M_PI, p=M_PI, y=0;  // Rotate the previous pose by 90* about X
+          // q_rot.setRPY(r, p, y);
+          // q_new = q_rot*q_orig;  // Calculate the new orientation
+          // q_new.normalize();
+          // // Stuff the new rotation back into the pose. This requires conversion into a msg type
+          // tf2::convert(q_new, part_worldPose_curr.transform.rotation);
+
           // The pose on the bin is to the bottom of the part, so need to add its height to it
-          double part_height;
-          if(order_part.part_type[9] == 'p') part_height = PUMP_HEIGHT;
-          else if(order_part.part_type[9] == 's') part_height = SENSOR_HEIGHT; 
-          else if(order_part.part_type[9] == 'b') part_height = BATTERY_HEIGHT;
-          else part_height = REGULATOR_HEIGHT;
           part_worldPose_curr.transform.translation.z += part_height;
           test = robot_g_arm.pickup_part_bins(part_worldPose_curr);
 
-          // NEED AGV LOGIC HERE
+          // Move to an out of the way pose
+          test = robot_g_torso.move_to(jgp_gt_prehandoff);
+
+          // Move to agv
           if(order_part.agv[3] == '1') test = robot_g_torso.move_to(jgp_gt_kit_agv1);
           else if(order_part.agv[3] == '2') test = robot_g_torso.move_to(jgp_gt_kit_agv2);
           else if(order_part.agv[3] == '3') test = robot_g_torso.move_to(jgp_gt_kit_agv3);
@@ -930,7 +873,313 @@ int main(int argc, char ** argv) {
   // Now end the competition
   end_competition(node);
 
+  
+
+
+  // int bb_old = 0;
+  // int bb_count = 0;
+  // // while (comp_class.breakbeam_triggered < 2 && bb_count < 50) {
+  // //   if (bb_old != comp_class.breakbeam_triggered) {
+  //     ros::Duration(10).sleep();
+  //     // Pickup first part
+  //     pick_part("assembly_regulator_red",robot_kit);
+
+  //     // Deliver first part and then pickup next part:
+  //     // ---------------------------------------------
+  //     // First, wait for the attachment and movement away from the conveyor to start 
+  //     while (!robot_kit.attached_ready) {
+  //       ros::Duration(0.25).sleep();
+  //     }
+  //     // Then wait for the movement away from the conveyor to complete (so the getCurrentPose call below returns the correct current pose!)
+  //     if (robot_kit.attached_ready) {
+  //       robot_kit.attached_ready = false;
+  //       ros::Duration(0.75).sleep();
+  //     }
+
+  //     // Now deliver the part to the AGV
+  //     geometry_msgs::Pose target_pose5 = robot_kit.move_group.getCurrentPose().pose;
+  //     target_pose5.position.y = 4.67;  // Move down y to AGV
+  //     robot_kit.move_group.setPoseTarget(target_pose5);
+  //     bool success = (robot_kit.move_group.plan(robot_kit.my_plan_) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+  //     robot_kit.move_group.move();
+  //     printf("move to agv done...\n");
+
+  //     geometry_msgs::Pose target_pose6 = target_pose5;
+  //     target_pose6.position.x = -2.26;  // Swing around to AGV
+  //     robot_kit.move_group.setPoseTarget(target_pose6);
+  //     success = (robot_kit.move_group.plan(robot_kit.my_plan_) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+  //     robot_kit.move_group.move();
+  //     printf("swing to agv done...\n");
+
+  //     geometry_msgs::Pose target_pose7 = target_pose6;
+  //     target_pose7.position.z = 0.91;  // Lower to drop position
+  //     robot_kit.move_group.setPoseTarget(target_pose7);
+  //     success = (robot_kit.move_group.plan(robot_kit.my_plan_) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+  //     robot_kit.move_group.move();
+  //     printf("lower part done...\n");
+
+  //     robot_kit.disable_gripper();
+
+  //     geometry_msgs::Pose target_pose8 = target_pose7;
+  //     target_pose8.position.z = 1.25;  // Raise arm
+  //     target_pose8.position.x += 0.25;  // Move arm closer to body
+  //     robot_kit.move_group.setPoseTarget(target_pose8);
+  //     success = (robot_kit.move_group.plan(robot_kit.my_plan_) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+  //     robot_kit.move_group.move();
+  //     printf("part left on AGV...\n");
+
+  //     // Now pickup the next part
+  //     pick_part("assembly_regulator_red",robot_kit);
+
+
+
+
+  //     // ---------------------------------------------------
+
+  //  // }
+  //    //ros::Duration(1).sleep();
+  //   // printf("bb count: %d\n", comp_class.breakbeam_triggered);
+  //   bb_count+=1;
+ // }
+
   return 0;
 }
 // %EndTag(MAIN)%
 // %EndTag(FULLTEXT)%
+
+// OLD FROM main:
+// -----------------
+
+//   ros::AsyncSpinner spinner(1);  // Use async so moveit doesn't block all code execution
+//   spinner.start();  
+
+//   // Robots must be initialized AFTER the `spinner.start()` above
+//   // Kitting robot_kit;
+//   Gantry_Arm robot_g_arm;  
+//   Gantry_Torso robot_g_torso;
+//   Kitting robot_kit;
+//   robot_g_torso.add_collision_objects();
+//   robot_g_arm.add_collision_objects();
+//   robot_kit.add_collision_objects();
+  
+//   // TESTING
+//   // --------
+//   int test = 0;
+//   geometry_msgs::TransformStamped localPose, part_worldPose_source, part_worldPose_dest;
+//   tf2::Quaternion q;
+
+//   // FROM part_flipping_handoff
+//   Part_Mgmt part_mgmt;
+
+//   test = robot_g_arm.ZeroArm();
+
+//   test = robot_g_torso.move_to(jgp_gt_kit_bin8);
+
+//   // pick part - need pose of part on agv in a TransformStamped message, which means converting rpy to quaternion
+//   q.setRPY( 0.0, 0.0, 0.00 );  // Create this quaternion from roll/pitch/yaw (in radians)
+//   q.normalize();
+//   std::cout << "The destination quaternion representation is: " << q[0] << " " << q[1] << " " << q[2] << " " << q[3] << "\n";
+//   part_worldPose_source.header.frame_id = "world";
+//   part_worldPose_source.transform.translation.x = -2.751691;
+//   part_worldPose_source.transform.translation.y = -3.479923;
+//   part_worldPose_source.transform.translation.z = 0.781468 + (PUMP_HEIGHT/2);
+//   part_worldPose_source.transform.rotation.x = q[0];
+//   part_worldPose_source.transform.rotation.y = q[1];
+//   part_worldPose_source.transform.rotation.z = q[2];
+//   part_worldPose_source.transform.rotation.w = q[3];
+
+//   // Pickup the part
+//   // FROM gantry_kitting
+//   test = robot_g_arm.pickup_part(part_worldPose_source);
+
+//   // Move to the destination agv
+//   test = robot_g_torso.move_to(jgp_gt_kit_agv4);
+
+//   // Drop part
+//   // xyz: [0.1, 0.1, 0], rpy: [0, 0, 0]
+//   localPose.header.frame_id = "kit_tray_4";
+//   // std::cout << "Getting OrderPart, original pose in vect: " << dest_pose.position.x << "\n";
+//   localPose.transform.translation.x = 0.1;
+//   localPose.transform.translation.y = 0.1;
+//   // FROM main
+//   test = robot_kit.pickup_part(part_worldPose_source);
+
+//   test = flip_part_handoff(robot_kit, robot_g_arm, robot_g_torso);
+
+  
+//   // FROM main
+//   //int test = 0;
+//   geometry_msgs::TransformStamped localPose, part_worldPose_source, part_worldPose_dest;
+//   tf2::Quaternion q;
+
+//   test = robot_g_arm.ZeroArm();
+
+//   test = robot_g_torso.move_torso(LOC_AS3_AGV3);
+
+//   // pick part - need pose of part on agv
+//   // xyz: [0.0, 0.0, 0]
+//   // rpy: [0, 0, 0]
+//   q.setRPY( 0, 0, 0 );  // Create this quaternion from roll/pitch/yaw (in radians)
+//   q.normalize();
+//   std::cout << "The destination quaternion representation is: " << q[0] << " " << q[1] << " " << q[2] << " " << q[3] << "\n";
+//   localPose.header.frame_id = "kit_tray_3";
+//   localPose.transform.translation.x = 0.0;
+//   localPose.transform.translation.y = 0.0;
+//   localPose.transform.translation.z = 0.0;
+//   localPose.transform.rotation.x = q[0];
+//   localPose.transform.rotation.y = q[1];
+//   localPose.transform.rotation.z = q[2];
+//   localPose.transform.rotation.w = q[3];
+//   part_worldPose_source = part_mgmt.GetPartPose(localPose);  // Pose on agv tray; z-value = BOTTOM of part on tray (hence need to add part height) 
+//   part_worldPose_source.transform.translation.z += (BATTERY_HEIGHT);
+//   std::cout << "Source pose.translation in case: " << part_worldPose_source.transform.translation.x << ", " << part_worldPose_source.transform.translation.y << ", " << part_worldPose_source.transform.translation.z << "\n";
+//   std::cout << "Source pose.rotation in case: " << part_worldPose_source.transform.rotation.x << ", " << part_worldPose_source.transform.rotation.y << ", " << part_worldPose_source.transform.rotation.z << ", " << part_worldPose_source.transform.rotation.w << "\n";
+
+//   test = robot_g_arm.pickup_part(part_worldPose_source);
+
+//   // Assuming pickup successful, attach the part to the end effector for planning
+
+//   // Maybe add joint constraint to keep the ee facing downward for the placing operations?
+//   test = robot_g_arm.CaseArm();
+
+//   test = robot_g_torso.move_torso(LOC_AS3_CASE);
+
+//   // place part - need pose of part on briefcase
+//   // xyz: [-0.032465, 0.174845, 0.15]
+//   // rpy: [0, 0, 0]
+//   localPose.header.frame_id = "briefcase_3";
+//   localPose.transform.translation.x = -0.032465;
+//   localPose.transform.translation.y = 0.174845;
+//   localPose.transform.translation.z = 0.15;
+//   localPose.transform.rotation.x = q[0];
+//   localPose.transform.rotation.y = q[1];
+//   localPose.transform.rotation.z = q[2];
+//   localPose.transform.rotation.w = q[3];
+//   part_worldPose_dest = part_mgmt.GetPartPose(localPose);  // Pose in briefcase; z-value = TOP of part installed in briefcase
+//   std::cout << "Destination pose.translation in case: " << part_worldPose_dest.transform.translation.x << ", " << part_worldPose_dest.transform.translation.y << ", " << part_worldPose_dest.transform.translation.z << "\n";
+//   std::cout << "Destination pose.rotation in case: " << part_worldPose_dest.transform.rotation.x << ", " << part_worldPose_dest.transform.rotation.y << ", " << part_worldPose_dest.transform.rotation.z << ", " << part_worldPose_dest.transform.rotation.w << "\n";
+
+//   test = robot_g_arm.drop_part(part_worldPose_dest);
+
+//   test = robot_g_torso.move_torso(LOC_AS3_AGV3);
+
+//   test = robot_g_arm.ZeroArm();
+
+//   // Now pick pump, too...
+//   localPose.header.frame_id = "kit_tray_3";
+//   localPose.transform.translation.x = 0.15;
+//   localPose.transform.translation.y = -0.1;
+//   // ABOVE from main
+//   localPose.transform.translation.z = 0;
+//   localPose.transform.rotation.x = q[0];
+//   localPose.transform.rotation.y = q[1];
+//   localPose.transform.rotation.z = q[2];
+//   localPose.transform.rotation.w = q[3];
+//   // FROM gantry_kitting
+//   part_worldPose_dest = part_mgmt.GetPartPose(localPose);
+//   std::cout << "The destination z is: " << part_worldPose_dest.transform.translation.z << "\n";
+//   part_worldPose_dest.transform.translation.z += (PUMP_HEIGHT + 0.02);  // For some reason this is still too close somehow; adding extra 0.02 for safety
+//   std::cout << "The destination z after adding pump height is: " << part_worldPose_dest.transform.translation.z << "\n";
+
+//   test = robot_g_arm.drop_part(part_worldPose_dest);  
+//   // FROM main
+//   part_worldPose_source = part_mgmt.GetPartPose(localPose);  // Pose on agv tray; z-value = BOTTOM of part on tray (hence need to add part height) 
+//   part_worldPose_source.transform.translation.z += (PUMP_HEIGHT);
+//   std::cout << "Source pose.translation in case: " << part_worldPose_source.transform.translation.x << ", " << part_worldPose_source.transform.translation.y << ", " << part_worldPose_source.transform.translation.z << "\n";
+//   std::cout << "Source pose.rotation in case: " << part_worldPose_source.transform.rotation.x << ", " << part_worldPose_source.transform.rotation.y << ", " << part_worldPose_source.transform.rotation.z << ", " << part_worldPose_source.transform.rotation.w << "\n";
+
+//   test = robot_g_arm.pickup_part(part_worldPose_source);
+
+//   test = robot_g_arm.CaseArm();
+
+//   test = robot_g_torso.move_torso(LOC_AS3_CASE);
+
+//   localPose.header.frame_id = "briefcase_3";
+//   localPose.transform.translation.x = 0.032085;
+//   localPose.transform.translation.y = -0.152835;
+//   localPose.transform.translation.z = 0.15;
+//   localPose.transform.rotation.x = q[0];
+//   localPose.transform.rotation.y = q[1];
+//   localPose.transform.rotation.z = q[2];
+//   localPose.transform.rotation.w = q[3];
+//   part_worldPose_dest = part_mgmt.GetPartPose(localPose);  // Pose in briefcase; z-value = TOP of part installed in briefcase
+//   std::cout << "Destination pose.translation in case: " << part_worldPose_dest.transform.translation.x << ", " << part_worldPose_dest.transform.translation.y << ", " << part_worldPose_dest.transform.translation.z << "\n";
+//   std::cout << "Destination pose.rotation in case: " << part_worldPose_dest.transform.rotation.x << ", " << part_worldPose_dest.transform.rotation.y << ", " << part_worldPose_dest.transform.rotation.z << ", " << part_worldPose_dest.transform.rotation.w << "\n";
+
+//   test = robot_g_arm.drop_part(part_worldPose_dest);
+
+//   test = robot_g_torso.move_torso(LOC_AS3_AGV3);
+
+//   test = robot_g_arm.ZeroArm();
+//   // ABOVE from main
+  
+//   // -------------
+//   // TESTING DONE
+
+//   return 0;
+// }
+// %EndTag(MAIN)%
+// %EndTag(FULLTEXT)%
+
+
+// WORKING PUMP ASSEMBLY CODE
+// -----------------------------------------------------------
+  // int test = 0;
+  // geometry_msgs::TransformStamped localPose, part_worldPose_source, part_worldPose_dest;
+  // tf2::Quaternion q;
+
+  // test = robot_g_arm.ZeroArm();
+
+  // test = robot_g_torso.move_torso(LOC_AS3_AGV3);
+
+  // // pick part - need pose of part on agv
+  // // xyz: [0.15, -0.1, 0]
+  // // rpy: [0, 0, 0]
+  // q.setRPY( 0, 0, 0 );  // Create this quaternion from roll/pitch/yaw (in radians)
+  // q.normalize();
+  // std::cout << "The destination quaternion representation is: " << q[0] << " " << q[1] << " " << q[2] << " " << q[3] << "\n";
+  // localPose.header.frame_id = "kit_tray_3";
+  // localPose.transform.translation.x = 0.15;
+  // localPose.transform.translation.y = -0.1;
+  // localPose.transform.translation.z = 0;
+  // localPose.transform.rotation.x = q[0];
+  // localPose.transform.rotation.y = q[1];
+  // localPose.transform.rotation.z = q[2];
+  // localPose.transform.rotation.w = q[3];
+  // part_worldPose_source = part_mgmt.GetPartPose(localPose);  // Pose on agv tray; z-value = BOTTOM of part on tray (hence need to add part height) 
+  // part_worldPose_source.transform.translation.z += (PUMP_HEIGHT);
+  // std::cout << "Source pose.translation in case: " << part_worldPose_source.transform.translation.x << ", " << part_worldPose_source.transform.translation.y << ", " << part_worldPose_source.transform.translation.z << "\n";
+  // std::cout << "Source pose.rotation in case: " << part_worldPose_source.transform.rotation.x << ", " << part_worldPose_source.transform.rotation.y << ", " << part_worldPose_source.transform.rotation.z << ", " << part_worldPose_source.transform.rotation.w << "\n";
+
+  // test = robot_g_arm.pickup_part(part_worldPose_source);
+
+  // // Assuming pickup successful, attach the part to the end effector for planning
+
+  // // Maybe add joint constraint to keep the ee facing downward for the placing operations?
+
+  // test = robot_g_arm.CaseArm();
+
+  // test = robot_g_torso.move_torso(LOC_AS3_CASE);
+
+  // // place part - need pose of part on briefcase
+  // // xyz: [0.032085, -0.152835, 0.25]
+  // // rpy: [0, 0, 0]
+  // localPose.header.frame_id = "briefcase_3";
+  // localPose.transform.translation.x = 0.032085;
+  // localPose.transform.translation.y = -0.152835;
+  // localPose.transform.translation.z = 0.15;
+  // localPose.transform.rotation.x = q[0];
+  // localPose.transform.rotation.y = q[1];
+  // localPose.transform.rotation.z = q[2];
+  // localPose.transform.rotation.w = q[3];
+  // part_worldPose_dest = part_mgmt.GetPartPose(localPose);  // Pose in briefcase; z-value = TOP of part installed in briefcase
+  // std::cout << "Destination pose.translation in case: " << part_worldPose_dest.transform.translation.x << ", " << part_worldPose_dest.transform.translation.y << ", " << part_worldPose_dest.transform.translation.z << "\n";
+  // std::cout << "Destination pose.rotation in case: " << part_worldPose_dest.transform.rotation.x << ", " << part_worldPose_dest.transform.rotation.y << ", " << part_worldPose_dest.transform.rotation.z << ", " << part_worldPose_dest.transform.rotation.w << "\n";
+
+  // test = robot_g_arm.drop_part(part_worldPose_dest);
+
+  // test = robot_g_torso.move_torso(LOC_AS3_AGV3);
+
+  // test = robot_g_arm.ZeroArm();
+// -----------------------------------------------------------
+// END -- WORKING PUMP ASSEMBLY CODE

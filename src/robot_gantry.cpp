@@ -344,10 +344,6 @@ int Gantry_Arm::pickup_part_bins(const geometry_msgs::TransformStamped & dest_po
     target_pose0.position.x = dest_pose_.transform.translation.x;
     target_pose0.position.y = dest_pose_.transform.translation.y;
     target_pose0.position.z = dest_pose_.transform.translation.z + 0.1;  // Move over part; was static value "0.805" when picking a battery off a bin
-    // target_pose0.orientation.x = dest_pose_.transform.rotation.x;
-    // target_pose0.orientation.y = dest_pose_.transform.rotation.y;
-    // target_pose0.orientation.z = dest_pose_.transform.rotation.z;
-    // target_pose0.orientation.w = dest_pose_.transform.rotation.w;
     waypoints.push_back(target_pose0);
     geometry_msgs::Pose target_pose01 = target_pose0;
     target_pose01.position.z = dest_pose_.transform.translation.z + 0.03;
@@ -363,16 +359,21 @@ int Gantry_Arm::pickup_part_bins(const geometry_msgs::TransformStamped & dest_po
     this->trajectory_success = 0;
     mg_counter = 0;
 
-    geometry_msgs::Pose target_pose1 = target_pose01;
+    geometry_msgs::Pose target_pose1;
+    target_pose1 = this->move_group.getCurrentPose().pose;
+    std::vector<geometry_msgs::Pose> pickup_poses(15);
+    for (int x = 0; x < 15; x++) {
+        target_pose1.position.z -= 0.005;
+        pickup_poses.at(x) = target_pose1;
+    }
+    fraction = this->move_group.computeCartesianPath(pickup_poses, this->eef_step, this->jump_threshold, this->trajectory, false);
+    this->my_plan_.trajectory_ = this->trajectory;
+    setAvgCartesianSpeed(this->my_plan_, "gantry_arm_ee_link", 0.01, "/ariac/gantry/robot_description");
+    this->check_joints = true;
+    this->move_group.execute(this->my_plan_);
+
     int move_counter =  0;
     while (!this->gripper_attached && move_counter < 15) {
-        target_pose1.position.z -= 0.005;  // Move closer over part
-        waypoints.clear();
-        waypoints.push_back(target_pose1);
-        fraction = this->move_group.computeCartesianPath(waypoints, this->eef_step, this->jump_threshold, this->trajectory, false);
-        this->my_plan_.trajectory_ = this->trajectory;
-        this->move_group.execute(this->my_plan_);
-        printf("done moving nearer part...\n");
         ros::Duration(0.25).sleep();
         move_counter++;
     }
@@ -397,6 +398,23 @@ int Gantry_Arm::pickup_part_bins(const geometry_msgs::TransformStamped & dest_po
     return 1;
 }
 
+void Gantry_Arm::gantry_arm_joint_state_callback(const sensor_msgs::JointState::ConstPtr & joint_state_msg) {
+    if (this->check_joints && this->gripper_attached) {
+        this->clear_arm_goal();
+        this->check_joints = false;
+        printf("\n\nIN CALLBACK! Stopping motion...\n\n");
+    }
+}
+
+void Gantry_Arm::clear_arm_goal() {
+    // Send an empty trajectory message to stop execution immediately
+    trajectory_msgs::JointTrajectory msg;
+
+    msg.joint_names.clear();
+    
+    this->gantry_arm_joint_trajectory_publisher_.publish(msg);  
+}
+
 int Gantry_Arm::drop_part(const geometry_msgs::TransformStamped & dest_pose_) {  // Drop the part at the location defined by the msg
     // First move near the destination
     int mg_counter = 0;
@@ -410,10 +428,10 @@ int Gantry_Arm::drop_part(const geometry_msgs::TransformStamped & dest_pose_) { 
     target_pose0.position.x = dest_pose_.transform.translation.x;
     target_pose0.position.y = dest_pose_.transform.translation.y;
     target_pose0.position.z = dest_pose_.transform.translation.z + 0.2;  // Move over destination; was "z+0.1" in original code
-    target_pose.orientation.x = dest_pose_.transform.rotation.x;
-    target_pose.orientation.y = dest_pose_.transform.rotation.y;
-    target_pose.orientation.z = dest_pose_.transform.rotation.z;
-    target_pose.orientation.w = dest_pose_.transform.rotation.w;
+    target_pose0.orientation.x = dest_pose_.transform.rotation.x;
+    target_pose0.orientation.y = dest_pose_.transform.rotation.y;
+    target_pose0.orientation.z = dest_pose_.transform.rotation.z;
+    target_pose0.orientation.w = dest_pose_.transform.rotation.w;
     waypoints.push_back(target_pose0);
     double fraction = this->move_group.computeCartesianPath(waypoints, this->eef_step, this->jump_threshold, this->trajectory, false);
     this->my_plan_.trajectory_ = this->trajectory;
@@ -507,11 +525,14 @@ int Gantry_Arm::drop_part_agv(const geometry_msgs::TransformStamped & dest_pose_
     target_pose0.position.x = dest_pose_.transform.translation.x;
     target_pose0.position.y = dest_pose_.transform.translation.y;
     target_pose0.position.z = dest_pose_.transform.translation.z + 0.2;  // Move over destination; was "z+0.1" in original code
-    target_pose.orientation.x = dest_pose_.transform.rotation.x;  // need to maintain original orientation else the gripper turns on its side for some reason
-    target_pose.orientation.y = dest_pose_.transform.rotation.y;
-    target_pose.orientation.z = dest_pose_.transform.rotation.z;
-    target_pose.orientation.w = dest_pose_.transform.rotation.w;
+    // target_pose.orientation.x = dest_pose_.transform.rotation.x;  // need to maintain original orientation else the gripper turns on its side for some reason
+    // target_pose.orientation.y = dest_pose_.transform.rotation.y;
+    // target_pose.orientation.z = dest_pose_.transform.rotation.z;
+    // target_pose.orientation.w = dest_pose_.transform.rotation.w;
     waypoints.push_back(target_pose0);
+    geometry_msgs::Pose target_pose01a = target_pose0;
+    target_pose01a.position.z = dest_pose_.transform.translation.z + 0.02;
+    waypoints.push_back(target_pose01a);
     double fraction = this->move_group.computeCartesianPath(waypoints, this->eef_step, this->jump_threshold, this->trajectory, false);
     this->my_plan_.trajectory_ = this->trajectory;
     this->move_group.execute(this->my_plan_);
@@ -523,23 +544,23 @@ int Gantry_Arm::drop_part_agv(const geometry_msgs::TransformStamped & dest_pose_
     this->trajectory_success = 0;
     mg_counter = 0;
 
-    waypoints.clear();
-    geometry_msgs::Pose target_pose01a = target_pose0;
-    target_pose01a.position.z = dest_pose_.transform.translation.z + 0.02;  // Move closer to drop position
-    waypoints.push_back(target_pose01a);
-    fraction = this->move_group.computeCartesianPath(waypoints, this->eef_step, this->jump_threshold, this->trajectory, false);
-    this->my_plan_.trajectory_ = this->trajectory;
-    this->move_group.execute(this->my_plan_);
-    while (this->trajectory_success < 1 && mg_counter < 10) {
-        ros::Duration(0.25).sleep();
-        mg_counter++;
-    }
-    this->sp_ = this->move_group.getCurrentPose();
-    this->p_ = this->sp_.pose;
-    geometry_msgs::Pose target_posed = this->p_;
-    printf("done lowering part to destination: %f\n", target_posed.position.z);
-    this->trajectory_success = 0;
-    mg_counter = 0;
+    // waypoints.clear();
+    // geometry_msgs::Pose target_pose01a = target_pose0;
+    // target_pose01a.position.z = dest_pose_.transform.translation.z + 0.02;  // Move closer to drop position
+    // waypoints.push_back(target_pose01a);
+    // fraction = this->move_group.computeCartesianPath(waypoints, this->eef_step, this->jump_threshold, this->trajectory, false);
+    // this->my_plan_.trajectory_ = this->trajectory;
+    // this->move_group.execute(this->my_plan_);
+    // while (this->trajectory_success < 1 && mg_counter < 10) {
+    //     ros::Duration(0.25).sleep();
+    //     mg_counter++;
+    // }
+    // this->sp_ = this->move_group.getCurrentPose();
+    // this->p_ = this->sp_.pose;
+    // geometry_msgs::Pose target_posed = this->p_;
+    // printf("done lowering part to destination: %f\n", target_posed.position.z);
+    // this->trajectory_success = 0;
+    // mg_counter = 0;
 
     // Then, disable the gripper to drop the part
     this->disable_gripper();
@@ -552,7 +573,7 @@ int Gantry_Arm::drop_part_agv(const geometry_msgs::TransformStamped & dest_pose_
     this->my_plan_.trajectory_ = this->trajectory;
     this->move_group.execute(this->my_plan_);
     while (this->trajectory_success < 1 && mg_counter < 10) {
-        ros::Duration(0.5).sleep();
+        ros::Duration(0.25).sleep();
         mg_counter++;
     }
     printf("hopefully part detached AND left in correct location...\n");
@@ -562,6 +583,76 @@ int Gantry_Arm::drop_part_agv(const geometry_msgs::TransformStamped & dest_pose_
 
     return 1;
 }
+
+// int Gantry_Arm::drop_part_agv(const geometry_msgs::TransformStamped & dest_pose_) {  // Drop the part at the location defined by the msg
+//     // First move near the destination
+//     int mg_counter = 0;
+//     std::vector<geometry_msgs::Pose> waypoints;
+//     this->sp_ = this->move_group.getCurrentPose();
+//     this->p_ = this->sp_.pose;
+//     geometry_msgs::Pose target_pose = this->p_;
+//     geometry_msgs::Pose starting_pose = this->p_;
+//     // waypoints.push_back(target_pose);  // Always start with the current pose before adding additional poses
+
+//     geometry_msgs::Pose target_pose0 = target_pose;
+//     target_pose0.position.x = dest_pose_.transform.translation.x;
+//     target_pose0.position.y = dest_pose_.transform.translation.y;
+//     target_pose0.position.z = dest_pose_.transform.translation.z + 0.2;  // Move over destination; was "z+0.1" in original code
+//     // target_pose.orientation.x = dest_pose_.transform.rotation.x;  // need to maintain original orientation else the gripper turns on its side for some reason
+//     // target_pose.orientation.y = dest_pose_.transform.rotation.y;
+//     // target_pose.orientation.z = dest_pose_.transform.rotation.z;
+//     // target_pose.orientation.w = dest_pose_.transform.rotation.w;
+//     waypoints.push_back(target_pose0);
+//     double fraction = this->move_group.computeCartesianPath(waypoints, this->eef_step, this->jump_threshold, this->trajectory, false);
+//     this->my_plan_.trajectory_ = this->trajectory;
+//     this->move_group.execute(this->my_plan_);
+//     while (this->trajectory_success < 1 && mg_counter < 10) {
+//         ros::Duration(0.25).sleep();
+//         mg_counter++;
+//     }
+//     printf("done moving near destination, z: %f\n", target_pose0.position.z);
+//     this->trajectory_success = 0;
+//     mg_counter = 0;
+
+//     waypoints.clear();
+//     geometry_msgs::Pose target_pose01a = target_pose0;
+//     target_pose01a.position.z = dest_pose_.transform.translation.z + 0.02;  // Move closer to drop position
+//     waypoints.push_back(target_pose01a);
+//     fraction = this->move_group.computeCartesianPath(waypoints, this->eef_step, this->jump_threshold, this->trajectory, false);
+//     this->my_plan_.trajectory_ = this->trajectory;
+//     this->move_group.execute(this->my_plan_);
+//     while (this->trajectory_success < 1 && mg_counter < 10) {
+//         ros::Duration(0.25).sleep();
+//         mg_counter++;
+//     }
+//     this->sp_ = this->move_group.getCurrentPose();
+//     this->p_ = this->sp_.pose;
+//     geometry_msgs::Pose target_posed = this->p_;
+//     printf("done lowering part to destination: %f\n", target_posed.position.z);
+//     this->trajectory_success = 0;
+//     mg_counter = 0;
+
+//     // Then, disable the gripper to drop the part
+//     this->disable_gripper();
+//     printf("hopefully part detached now\n");
+
+//     waypoints.clear();
+//     waypoints.push_back(starting_pose);
+
+//     fraction = this->move_group.computeCartesianPath(waypoints, this->eef_step, this->jump_threshold, this->trajectory, false);
+//     this->my_plan_.trajectory_ = this->trajectory;
+//     this->move_group.execute(this->my_plan_);
+//     while (this->trajectory_success < 1 && mg_counter < 10) {
+//         ros::Duration(0.5).sleep();
+//         mg_counter++;
+//     }
+//     printf("hopefully part detached AND left in correct location...\n");
+//     this->trajectory_success = 0;
+//     this->sp_ = this->move_group.getCurrentPose();
+//     this->p_ = this->sp_.pose;
+
+//     return 1;
+// }
 
 int Gantry_Arm::ZeroArm() {
     // const robot_state::JointModelGroup* joint_model_group = this->move_group.getCurrentState()->getJointModelGroup(PLANNING_GROUP_GANTRY);

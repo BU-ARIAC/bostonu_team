@@ -142,7 +142,7 @@ int Kitting::pickup_part(const geometry_msgs::TransformStamped & dest_pose_) {  
     waypoints.push_back(target_pose1);
 
     geometry_msgs::Pose target_pose2 = target_pose1;
-    target_pose2.position.z = dest_pose_.transform.translation.z + 0.03;  // Move over part; was static value "0.805" when picking a battery off a bin
+    target_pose2.position.z = dest_pose_.transform.translation.z + 0.01;  // Move over part; was static value "0.805" when picking a battery off a bin
     waypoints.push_back(target_pose2);
     double fraction = this->move_group.computeCartesianPath(waypoints, this->eef_step, this->jump_threshold, this->trajectory);
     this->my_plan_.trajectory_ = this->trajectory;
@@ -205,6 +205,10 @@ int Kitting::drop_part(const geometry_msgs::TransformStamped & dest_pose_) {  //
 
     geometry_msgs::Pose target_pose0 = target_pose;
     target_pose0.position.y = dest_pose_.transform.translation.y;  // Just move to it on the y-axis
+    target_pose0.orientation.x = dest_pose_.transform.rotation.x;
+    target_pose0.orientation.y = dest_pose_.transform.rotation.y;
+    target_pose0.orientation.z = dest_pose_.transform.rotation.z;
+    target_pose0.orientation.w = dest_pose_.transform.rotation.w;
     waypoints.push_back(target_pose0); 
 
     geometry_msgs::Pose target_pose1 = target_pose0;
