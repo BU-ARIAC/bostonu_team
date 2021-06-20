@@ -59,11 +59,10 @@ void Orders::process_received_orders() {
             this->max_priority += 1;
         }
         if (order.kitting_shipments.size() > 0) {
-            OrderShipment order_shipment;
-            order_shipment.order_shipment_type = order_kit_order;
-            order_shipment.priority = this->max_priority;
-            auto shipments = order.kitting_shipments;
-            for (const auto &shipment : shipments){
+            for (const auto &shipment : order.kitting_shipments){
+                OrderShipment order_shipment;
+                order_shipment.order_shipment_type = order_kit_order;
+                order_shipment.priority = this->max_priority;   
                 order_shipment.order_shipment_number = shipment.shipment_type;
                 order_shipment.order_shipment_agv = shipment.agv_id;
                 order_shipment.order_shipment_station = shipment.station_id;
@@ -76,16 +75,20 @@ void Orders::process_received_orders() {
                     order_shipment.part_type_pose_vect.emplace_back(ptp_);
                     allocateOrderPart(product.type);
                 }
+                osv.emplace_back(order_shipment);
             }
-            osv.emplace_back(order_shipment);
         }
         if (order.assembly_shipments.size() > 0) {
-            OrderShipment order_shipment;
-            order_shipment.order_shipment_type = order_asm_order;
-            order_shipment.priority = this->max_priority;
-            order_shipment.order_shipment_agv = "-1"; // No agv for asembly orders (agv already at station), so all get static value "-1"
-            auto a_shipments = order.assembly_shipments;
-            for (const auto &shipment : a_shipments){
+            // OrderShipment order_shipment;
+            // order_shipment.order_shipment_type = order_asm_order;
+            // order_shipment.priority = this->max_priority;
+            // order_shipment.order_shipment_agv = "-1"; // No agv for asembly orders (agv already at station), so all get static value "-1"
+            // auto a_shipments = order.assembly_shipments;
+            for (const auto &shipment : order.assembly_shipments){
+                OrderShipment order_shipment;
+                order_shipment.order_shipment_type = order_asm_order;
+                order_shipment.priority = this->max_priority;
+                order_shipment.order_shipment_agv = "-1"; // No agv for asembly orders (agv already at station), so all get static value "-1"
                 order_shipment.order_shipment_number = shipment.shipment_type;
                 order_shipment.order_shipment_station = shipment.station_id;
                 auto products = shipment.products;
@@ -96,8 +99,9 @@ void Orders::process_received_orders() {
                     // std::cout << product.pose.position.x << " " << product.pose.position.y << " " << product.pose.position.z << std::endl;
                     order_shipment.part_type_pose_vect.emplace_back(ptp_);
                 }
+                osv.emplace_back(order_shipment);
             }
-            osv.emplace_back(order_shipment);
+            // osv.emplace_back(order_shipment);
         }
         this->order_list.insert({order_number, osv});
         
