@@ -183,6 +183,7 @@ class Kitting : public Robot
                 kitting_joint_state_subscriber = robot_node.subscribe("/ariac/kitting/joint_states", 10, &Kitting::kitting_joint_state_callback, this);
             };
         bool check_joints = false;  // Used to determine when to process checks in joint_state_callback
+        bool check_joints2 = false;  // Used to determine when to process checks in joint_state_callback
         bool attached_ready = false;
         bool watch_linac = false;
         int testing = 0;
